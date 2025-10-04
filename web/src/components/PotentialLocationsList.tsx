@@ -14,8 +14,12 @@ const PotentialLocationsList: React.FC<PotentialLocationsListProps> = ({
   onSelectLocation,
   loading = false,
 }) => {
-  console.log('PotentialLocationsList props:', { locations, selectedLocation, loading });
-  
+  console.log("PotentialLocationsList props:", {
+    locations,
+    selectedLocation,
+    loading,
+  });
+
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
@@ -67,9 +71,9 @@ const PotentialLocationsList: React.FC<PotentialLocationsListProps> = ({
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {locations.map((location) => (
             <div
-              key={location.id}
+              key={location._id || location.id}
               className={`border rounded-lg p-3 cursor-pointer transition-all ${
-                selectedLocation?.id === location.id
+                selectedLocation?._id === location._id
                   ? "border-indigo-500 bg-indigo-50 shadow-md"
                   : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
               }`}
@@ -127,7 +131,9 @@ const PotentialLocationsList: React.FC<PotentialLocationsListProps> = ({
 
                         return (
                           <span
-                            key={`permit-${location.id}-${index}`}
+                            key={`permit-${
+                              location._id || location.id
+                            }-${index}`}
                             className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full"
                           >
                             {permitText}
@@ -147,7 +153,7 @@ const PotentialLocationsList: React.FC<PotentialLocationsListProps> = ({
                   </div>
                 </div>
 
-                {selectedLocation?.id === location.id && (
+                {selectedLocation?._id === location._id && (
                   <div className="flex-shrink-0">
                     <svg
                       className="w-5 h-5 text-indigo-600"

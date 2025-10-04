@@ -6,6 +6,37 @@ import {
   isAIAgentAvailable,
 } from "../services/aiAgent.js";
 
+/**
+ * Helper function to map AI location results to consistent response format
+ * Includes all hybrid fields from Gemini-first approach
+ */
+const mapAILocationToResponse = (loc) => ({
+  title: loc.name,
+  name: loc.name,
+  description: loc.reason || loc.description,
+  reason: loc.reason,
+  coordinates: loc.coordinates,
+  address: loc.address,
+  region: loc.address,
+  tags: loc.tags || loc.types || [],
+  rating: loc.rating,
+
+  // NEW HYBRID FIELDS (Gemini-first approach)
+  verified: loc.verified || false,
+  placeId: loc.placeId || null,
+  mapsLink: loc.mapsLink || null,
+  photos: loc.photos || [],
+  googleTypes: loc.googleTypes || [],
+  filmingDetails: loc.filmingDetails || {},
+  estimatedCost: loc.estimatedCost || null,
+  permits: loc.permits || [],
+
+  // Legacy fields for backward compatibility
+  confidence: loc.rating ? loc.rating / 10 : 0.5,
+  images: loc.photos?.map((photo) => photo.url) || [],
+  source: "ai-agent",
+});
+
 // AI-powered location analysis
 export const analyzeLocation = async (req, res) => {
   try {
@@ -47,16 +78,13 @@ export const analyzeLocation = async (req, res) => {
                 name: loc.name,
                 reason: loc.reason,
                 rating: loc.rating,
+                verified: loc.verified,
+                photos: loc.photos,
               })),
             },
-            similarLocations: result.results.slice(1, 4).map((loc) => ({
-              title: loc.name,
-              description: loc.reason,
-              coordinates: loc.coordinates,
-              region: loc.address,
-              rating: loc.rating,
-              placeId: loc.placeId,
-            })),
+            similarLocations: result.results
+              .slice(1, 4)
+              .map(mapAILocationToResponse),
             source: "ai-agent",
             cacheStatus: result.cacheStatus,
             metadata: result.metadata,
@@ -137,16 +165,7 @@ export const getSimilarLocations = async (req, res) => {
           maxResults: 5,
         });
 
-        const suggestions = result.results.map((loc) => ({
-          title: loc.name,
-          description: loc.reason,
-          coordinates: loc.coordinates,
-          region: loc.address,
-          rating: loc.rating,
-          placeId: loc.placeId,
-          tags: loc.types || [],
-          confidence: loc.rating / 10,
-        }));
+        const suggestions = result.results.map(mapAILocationToResponse);
 
         return res.json({
           success: true,
@@ -245,17 +264,7 @@ export const searchPotentialLocations = async (req, res) => {
           maxResults: limit - existingLocations.length,
         });
 
-        aiSuggestions = result.results.map((loc) => ({
-          title: loc.name,
-          description: loc.reason,
-          coordinates: loc.coordinates,
-          region: loc.address,
-          rating: loc.rating,
-          placeId: loc.placeId,
-          tags: loc.types || [],
-          source: "ai-suggestion",
-          cached: result.cached,
-        }));
+        aiSuggestions = result.results.map(mapAILocationToResponse);
       } catch (error) {
         console.error("AI suggestion error:", error);
         // Continue without AI suggestions
@@ -298,11 +307,30 @@ export const addToPotential = async (req, res) => {
         : "No user"
     );
 
-    const { suggestionId, manualData } = req.body;
+    const { suggestionId, suggestionData, manualData } = req.body;
 
     let locationData;
 
-    if (suggestionId) {
+    if (suggestionData) {
+      // New approach: Frontend passes full suggestion object with all hybrid fields
+      console.log("Using suggestionData (full object)");
+
+      locationData = {
+        title: suggestionData.title || suggestionData.name,
+        description: suggestionData.description || suggestionData.reason,
+        coordinates: suggestionData.coordinates,
+        region: suggestionData.region || suggestionData.address,
+        permits: suggestionData.permits || [],
+        images:
+          suggestionData.images ||
+          suggestionData.photos?.map((p) => p.url) ||
+          [],
+        tags: suggestionData.tags || [],
+        addedBy: req.user._id,
+      };
+    } else if (suggestionId) {
+      // Legacy approach: Try to fetch from mock service (for backward compatibility)
+      console.log("Using suggestionId (legacy approach)");
       // For this mock implementation, we'll get the suggestion data from the AI service
       // In a real app, you might store suggestions temporarily or fetch from a suggestions collection
       const suggestions = await mockAiService.searchLocations("dummy prompt");
@@ -381,7 +409,8 @@ export const addToPotential = async (req, res) => {
     } else {
       return res.status(400).json({
         success: false,
-        error: "Either suggestionId or manualData is required.",
+        error:
+          "Either suggestionData, suggestionId, or manualData is required.",
       });
     }
 

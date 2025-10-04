@@ -7,6 +7,7 @@ export interface User {
 
 export interface Location {
   _id: string;
+  id?: string; // Alias for _id for compatibility
   title: string;
   description: string;
   coordinates: {
@@ -15,6 +16,7 @@ export interface Location {
   };
   permits: (string | { name: string; required?: boolean; notes?: string })[];
   imageUrl?: string;
+  images?: string[]; // Array of image URLs
   status: "suggestion" | "potential" | "finalized";
   createdAt: string;
   updatedAt: string;
@@ -28,21 +30,49 @@ export interface Location {
 }
 
 export interface Suggestion {
+  id?: string;
   title: string;
+  name?: string; // Backend may use 'name' instead of 'title'
   description: string;
+  reason?: string; // Backend may use 'reason' for description
+  address?: string;
   coordinates: {
     lat: number;
     lng: number;
   };
-  region: string;
+  region?: string;
   tags: string[];
+  rating?: number; // Gemini rating 0-10
   permits: Array<{
     name: string;
     required: boolean;
     notes?: string;
+    estimatedCost?: string;
+    processingTime?: string;
+    authority?: string;
   }>;
-  images: string[];
-  confidence: number;
+  filmingDetails?: {
+    accessibility?: string;
+    parking?: string;
+    powerAccess?: string;
+    bestTimeToFilm?: string;
+    crowdLevel?: string;
+    weatherConsiderations?: string;
+  };
+  estimatedCost?: string;
+  images?: string[];
+  imageUrl?: string;
+  photos?: Array<{
+    url: string;
+    width: number;
+    height: number;
+    photoReference: string;
+  }>;
+  confidence?: number;
+  verified?: boolean; // NEW: Whether Google Places verified this location
+  placeId?: string; // NEW: Google Place ID if verified
+  mapsLink?: string; // NEW: Google Maps link if verified
+  googleTypes?: string[];
   createdAt?: string;
 }
 

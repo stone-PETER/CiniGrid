@@ -40,16 +40,28 @@ export const searchLocations = async (req, res) => {
       // Transform AI Agent results to match the expected format
       suggestions = result.results.map((location) => ({
         title: location.name,
-        description: location.reason,
+        name: location.name, // Keep both for compatibility
+        description: location.reason || location.description,
+        reason: location.reason,
         coordinates: location.coordinates,
         region: location.address || "Location address",
-        tags: location.types || ["location"],
-        rating: location.rating,
-        placeId: location.placeId,
         address: location.address,
-        photos: location.photos || [],
-        additionalInfo: location.additionalInfo || {},
-        permits: [
+        tags: location.tags || location.types || ["location"],
+        rating: location.rating, // Gemini rating 0-10
+
+        // NEW HYBRID FIELDS
+        verified: location.verified || false, // Whether Google Places verified
+        placeId: location.placeId || null, // Google Place ID
+        mapsLink: location.mapsLink || null, // Google Maps link
+        photos: location.photos || [], // Array of photo objects with urls
+        googleTypes: location.googleTypes || [],
+
+        // Filming details from Gemini
+        filmingDetails: location.filmingDetails || {},
+        estimatedCost: location.estimatedCost || null,
+
+        // Permits from Gemini (with full details)
+        permits: location.permits || [
           {
             name: "Local Filming Permit",
             required: true,
@@ -61,8 +73,11 @@ export const searchLocations = async (req, res) => {
             notes: "Obtain permission from property owner/manager",
           },
         ],
-        images: location.photos?.map((photo) => photo.photoReference) || [],
-        confidence: location.rating / 10, // Convert 0-10 rating to 0-1 confidence
+
+        // Legacy fields for backward compatibility
+        images: location.photos?.map((photo) => photo.url) || [],
+        confidence: location.rating ? location.rating / 10 : 0.5, // Convert 0-10 rating to 0-1 confidence
+        additionalInfo: location.additionalInfo || {},
         createdAt: new Date(),
       }));
 
