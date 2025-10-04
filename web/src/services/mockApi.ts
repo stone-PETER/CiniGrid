@@ -22,54 +22,89 @@ const mockUsers: User[] = [
 
 const mockSuggestions: Suggestion[] = [
   {
-    id: 'sugg-1',
     title: 'Modern Downtown Office Complex',
     description: 'A sleek 20-story glass building in the heart of downtown with panoramic city views, modern amenities, and excellent public transport access.',
     coordinates: { lat: 40.7589, lng: -73.9851 },
-    permits: ['Filming Permit', 'Parking Permit', 'Sound Permit'],
-    imageUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=500',
-    reasoning: 'Matches requirements for modern glass facade and urban setting'
+    region: 'Downtown Manhattan',
+    tags: ['modern', 'office', 'downtown', 'glass-building'],
+    permits: [
+      { name: 'Filming Permit', required: true },
+      { name: 'Parking Permit', required: true },
+      { name: 'Sound Permit', required: false }
+    ],
+    images: ['https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=500'],
+    confidence: 0.92
   },
   {
-    id: 'sugg-2',
     title: 'Historic Warehouse District',
     description: 'Industrial converted warehouse space with exposed brick walls, high ceilings, and large windows. Perfect for creative projects.',
     coordinates: { lat: 40.7505, lng: -73.9934 },
-    permits: ['Filming Permit', 'Equipment Permit'],
-    imageUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=500',
-    reasoning: 'Provides industrial aesthetic with character and flexibility'
+    region: 'Brooklyn Industrial',
+    tags: ['industrial', 'warehouse', 'brick', 'high-ceilings'],
+    permits: [
+      { name: 'Filming Permit', required: true },
+      { name: 'Equipment Permit', required: true }
+    ],
+    images: ['https://images.unsplash.com/photo-1497366216548-37526070297c?w=500'],
+    confidence: 0.87
   },
   {
-    id: 'sugg-3',
     title: 'Luxury Hotel Rooftop',
     description: 'Stunning rooftop location with city skyline views, upscale furnishings, and professional lighting setup available.',
     coordinates: { lat: 40.7614, lng: -73.9776 },
-    permits: ['Filming Permit', 'Rooftop Access Permit', 'Sound Permit'],
-    imageUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500',
-    reasoning: 'Offers premium location with excellent views and lighting'
+    region: 'Midtown Manhattan',
+    tags: ['rooftop', 'luxury', 'hotel', 'skyline-views'],
+    permits: [
+      { name: 'Filming Permit', required: true },
+      { name: 'Rooftop Access Permit', required: true },
+      { name: 'Sound Permit', required: false }
+    ],
+    images: ['https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500'],
+    confidence: 0.95
   }
 ];
 
 let mockPotentialLocations: Location[] = [
   {
-    id: 'pot-1',
+    _id: 'pot-1',
     title: 'Central Park West Apartment',
     description: 'Elegant pre-war apartment with park views and classic NYC charm.',
     coordinates: { lat: 40.7829, lng: -73.9654 },
-    permits: ['Filming Permit'],
-    imageUrl: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=500',
-    status: 'potential',
+    region: 'Upper West Side',
+    tags: ['apartment', 'pre-war', 'park-view'],
+    permits: [
+      { name: 'Filming Permit', required: true }
+    ],
+    images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=500'],
+    addedBy: {
+      _id: 'user-1',
+      username: 'scout1',
+      role: 'scout'
+    },
+    notes: [],
+    approvals: [],
     createdAt: '2024-10-01T10:00:00Z',
     updatedAt: '2024-10-01T10:00:00Z'
   },
   {
-    id: 'pot-2',
+    _id: 'pot-2',
     title: 'Brooklyn Bridge View Cafe',
     description: 'Charming waterfront cafe with iconic bridge views and cozy interior.',
     coordinates: { lat: 40.7041, lng: -73.9969 },
-    permits: ['Filming Permit', 'Food Service Permit'],
-    imageUrl: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500',
-    status: 'potential',
+    region: 'DUMBO Brooklyn',
+    tags: ['cafe', 'waterfront', 'bridge-view'],
+    permits: [
+      { name: 'Filming Permit', required: true },
+      { name: 'Food Service Permit', required: true }
+    ],
+    images: ['https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500'],
+    addedBy: {
+      _id: 'user-1',
+      username: 'scout1',
+      role: 'scout'
+    },
+    notes: [],
+    approvals: [],
     createdAt: '2024-10-02T14:30:00Z',
     updatedAt: '2024-10-02T14:30:00Z'
   }
@@ -77,15 +112,33 @@ let mockPotentialLocations: Location[] = [
 
 let mockFinalizedLocations: Location[] = [
   {
-    id: 'fin-1',
+    _id: 'fin-1',
     title: 'Times Square Studio',
     description: 'Professional studio space in the heart of Times Square with controlled lighting.',
     coordinates: { lat: 40.7580, lng: -73.9855 },
-    permits: ['Filming Permit', 'Sound Permit', 'Equipment Permit'],
-    imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500',
-    status: 'finalized',
+    region: 'Times Square',
+    tags: ['studio', 'professional', 'controlled-lighting'],
+    permits: [
+      { name: 'Filming Permit', required: true },
+      { name: 'Sound Permit', required: true },
+      { name: 'Equipment Permit', required: true }
+    ],
+    images: ['https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500'],
+    addedBy: {
+      _id: 'user-2',
+      username: 'manager1',
+      role: 'manager'
+    },
+    notes: [],
+    approvals: [],
     createdAt: '2024-09-28T09:00:00Z',
-    updatedAt: '2024-10-03T16:20:00Z'
+    updatedAt: '2024-10-03T16:20:00Z',
+    finalizedBy: {
+      _id: 'user-3',
+      username: 'admin1',
+      role: 'producer'
+    },
+    finalizedAt: '2024-10-03T16:20:00Z'
   }
 ];
 
@@ -215,7 +268,7 @@ export const mockApiService = {
 
     getPotentialLocationDetail: async (id: string): Promise<ApiResponse<Location>> => {
       await delay(200);
-      const location = mockPotentialLocations.find(l => l.id === id);
+      const location = mockPotentialLocations.find(l => l._id === id);
       
       if (!location) {
         throw new Error('Location not found');
@@ -231,17 +284,23 @@ export const mockApiService = {
       await delay(400);
       
       const newLocation: Location = {
-        id: generateId(),
-        title: location.title,
-        description: location.description,
-        coordinates: location.coordinates,
-        permits: location.permits,
-        imageUrl: location.imageUrl,
-        status: 'potential',
+        _id: generateId(),
+        title: location.manualData?.title || 'Untitled Location',
+        description: location.manualData?.description || '',
+        coordinates: location.manualData?.coordinates || { lat: 0, lng: 0 },
+        region: location.manualData?.region || '',
+        tags: location.manualData?.tags || [],
+        permits: location.manualData?.permits?.map(p => ({ name: p, required: true })) || [],
+        images: location.manualData?.images || [],
+        addedBy: {
+          _id: 'current-user',
+          username: 'current-user',
+          role: 'scout'
+        },
+        notes: [],
+        approvals: [],
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        ...(location.suggestionId && { suggestionId: location.suggestionId }),
-        ...(location.manualData && { manualData: location.manualData })
+        updatedAt: new Date().toISOString()
       };
 
       mockPotentialLocations.push(newLocation);
@@ -263,7 +322,7 @@ export const mockApiService = {
     finalizeLocation: async (id: string): Promise<ApiResponse<Location>> => {
       await delay(500);
       
-      const locationIndex = mockPotentialLocations.findIndex(l => l.id === id);
+      const locationIndex = mockPotentialLocations.findIndex(l => l._id === id);
       if (locationIndex === -1) {
         throw new Error('Location not found');
       }
@@ -271,8 +330,13 @@ export const mockApiService = {
       const location = mockPotentialLocations[locationIndex];
       const finalizedLocation: Location = {
         ...location,
-        status: 'finalized',
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        finalizedBy: {
+          _id: 'current-user',
+          username: 'current-user',
+          role: 'manager'
+        },
+        finalizedAt: new Date().toISOString()
       };
 
       // Move from potential to finalized
@@ -292,22 +356,34 @@ export const mockApiService = {
       await delay(400);
       
       const newLocation: Location = {
-        id: generateId(),
-        title: location.title,
-        description: location.description,
-        coordinates: location.coordinates,
-        permits: location.permits,
-        imageUrl: location.imageUrl,
-        status,
+        _id: generateId(),
+        title: location.manualData?.title || 'Untitled Location',
+        description: location.manualData?.description || '',
+        coordinates: location.manualData?.coordinates || { lat: 0, lng: 0 },
+        region: location.manualData?.region || '',
+        tags: location.manualData?.tags || [],
+        permits: location.manualData?.permits?.map(p => ({ name: p, required: true })) || [],
+        images: location.manualData?.images || [],
+        addedBy: {
+          _id: 'current-user',
+          username: 'current-user',
+          role: 'scout'
+        },
+        notes: [],
+        approvals: [],
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        ...(location.suggestionId && { suggestionId: location.suggestionId }),
-        ...(location.manualData && { manualData: location.manualData })
+        updatedAt: new Date().toISOString()
       };
 
       if (status === 'potential') {
         mockPotentialLocations.push(newLocation);
       } else {
+        newLocation.finalizedBy = {
+          _id: 'current-user',
+          username: 'current-user',
+          role: 'manager'
+        };
+        newLocation.finalizedAt = new Date().toISOString();
         mockFinalizedLocations.push(newLocation);
       }
 
@@ -334,10 +410,11 @@ export const mockApiService = {
       
       const newNote: Note = {
         id: generateId(),
-        ...noteData,
+        content: noteData.text,
         author: 'current-user', // In real app, this would come from auth
         role: 'scout', // In real app, this would come from auth
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        locationId: noteData.locationId
       };
 
       mockNotes.push(newNote);
@@ -365,9 +442,11 @@ export const mockApiService = {
       
       const newApproval: Approval = {
         id: generateId(),
-        ...approvalData,
         role: 'manager', // In real app, this would come from auth
-        timestamp: new Date().toISOString()
+        status: approvalData.approved ? 'approved' : 'rejected',
+        notes: approvalData.comment,
+        timestamp: new Date().toISOString(),
+        locationId: approvalData.locationId
       };
 
       // Remove existing approval from same role for this location

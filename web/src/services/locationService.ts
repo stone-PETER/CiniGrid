@@ -141,6 +141,13 @@ export const locationService = {
     );
   },
 
+  addPotentialFromSuggestion: async (suggestionIndex: number): Promise<ApiResponse<Location>> => {
+    return apiCall(
+      () => api.post('/locations/potential', { suggestionId: suggestionIndex.toString() }),
+      () => mockApiService.locations.addPotentialLocation({ suggestionId: suggestionIndex.toString() })
+    );
+  },
+
   // Finalized locations
   getFinalizedLocations: async (): Promise<ApiResponse<Location[]>> => {
     return apiCall(
@@ -173,8 +180,8 @@ export const locationService = {
     status: "potential" | "finalized" = "potential"
   ): Promise<ApiResponse<Location>> => {
     return apiCall(
-      () => api.post(`/locations/direct-add/${status}`, location),
-      () => mockApiService.locations.directAddLocation(location, status)
+      () => api.post('/locations/direct-add/finalized', locationData),
+      () => mockApiService.locations.directAddLocation({ manualData: locationData }, 'finalized')
     );
   },
 };
@@ -183,7 +190,7 @@ export const locationService = {
 export const notesService = {
   getNotes: async (locationId: string): Promise<ApiResponse<Note[]>> => {
     return apiCall(
-      () => api.get(`/locations/${locationId}/notes`),
+      () => api.get(`/locations/potential/${locationId}/notes`),
       () => mockApiService.notes.getNotes(locationId)
     );
   },
@@ -205,7 +212,7 @@ export const approvalsService = {
     locationId: string
   ): Promise<ApiResponse<Approval[]>> => {
     return apiCall(
-      () => api.get(`/locations/${locationId}/approvals`),
+      () => api.get(`/locations/potential/${locationId}/approvals`),
       () => mockApiService.approvals.getApprovals(locationId)
     );
   },

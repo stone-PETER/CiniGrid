@@ -27,6 +27,10 @@ const PotentialDetailPanel: React.FC<PotentialDetailPanelProps> = ({
   const [showFinalizeConfirm, setShowFinalizeConfirm] = useState(false);
 
   const openMapInNewTab = () => {
+    if (!location.coordinates) {
+      console.error('Location coordinates are not available');
+      return;
+    }
     const url = `https://www.google.com/maps?q=${location.coordinates.lat},${location.coordinates.lng}&ll=${location.coordinates.lat},${location.coordinates.lng}&z=16&t=m&markers=size:mid%7Ccolor:red%7C${location.coordinates.lat},${location.coordinates.lng}`;
     window.open(url, '_blank');
   };
@@ -50,8 +54,8 @@ const PotentialDetailPanel: React.FC<PotentialDetailPanelProps> = ({
   };
 
   const currentUserApproval = approvals.find(approval => approval.role === currentUser?.role);
-  // Only allow users with roles that exist in the User type to manage
-  const canManage = currentUser?.role === 'producer' || currentUser?.role === 'director';
+  // Allow managers, producers, and directors to finalize locations
+  const canManage = currentUser?.role === 'producer' || currentUser?.role === 'director' || currentUser?.role === 'manager';
   const hasRequiredApprovals = approvals.some(approval => approval.status === 'approved');
 
   return (
@@ -64,13 +68,28 @@ const PotentialDetailPanel: React.FC<PotentialDetailPanelProps> = ({
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
               Potential
             </span>
-            {canManage && hasRequiredApprovals && (
-              <button
-                onClick={() => setShowFinalizeConfirm(true)}
-                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm"
-              >
-                Finalize Location
-              </button>
+            {canManage ? (
+              hasRequiredApprovals ? (
+                <button
+                  onClick={() => setShowFinalizeConfirm(true)}
+                  className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm font-medium transition-colors"
+                >
+                  ✓ Finalize Location
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled
+                    className="bg-gray-300 text-gray-500 px-4 py-2 rounded-md text-sm font-medium cursor-not-allowed"
+                    title="At least one approval required to finalize"
+                  >
+                    Finalize Location
+                  </button>
+                  <span className="text-xs text-gray-500">(Needs approval)</span>
+                </div>
+              )
+            ) : (
+              <span className="text-xs text-gray-500 px-2">Only managers+ can finalize</span>
             )}
           </div>
         </div>
@@ -81,9 +100,9 @@ const PotentialDetailPanel: React.FC<PotentialDetailPanelProps> = ({
           {/* Left Column - Location Details */}
           <div className="space-y-6">
             {/* Image */}
-            {location.imageUrl ? (
+            {location.images && location.images.length > 0 ? (
               <img 
-                src={location.imageUrl} 
+                src={location.images[0]} 
                 alt={location.title}
                 className="w-full h-64 object-cover rounded-lg"
               />
@@ -111,7 +130,7 @@ const PotentialDetailPanel: React.FC<PotentialDetailPanelProps> = ({
                       key={index}
                       className="inline-block bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full"
                     >
-                      {permit}
+                      {permit.name}
                     </span>
                   ))}
                 </div>
@@ -121,19 +140,25 @@ const PotentialDetailPanel: React.FC<PotentialDetailPanelProps> = ({
             {/* Location & Map */}
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Location</h3>
-              <p className="text-gray-700 mb-3">
-                Coordinates: {location.coordinates.lat.toFixed(6)}, {location.coordinates.lng.toFixed(6)}
-              </p>
-              <button
-                onClick={openMapInNewTab}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm flex items-center gap-2"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                View on Google Maps
-              </button>
+              {location.coordinates ? (
+                <>
+                  <p className="text-gray-700 mb-3">
+                    Coordinates: {location.coordinates.lat.toFixed(6)}, {location.coordinates.lng.toFixed(6)}
+                  </p>
+                  <button
+                    onClick={openMapInNewTab}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    View on Map
+                  </button>
+                </>
+              ) : (
+                <p className="text-gray-500 mb-3">Location coordinates not available</p>
+              )}
             </div>
           </div>
 

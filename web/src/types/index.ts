@@ -6,7 +6,7 @@ export interface User {
 }
 
 export interface Location {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   coordinates: {
@@ -18,19 +18,32 @@ export interface Location {
   status: "suggestion" | "potential" | "finalized";
   createdAt: string;
   updatedAt: string;
+  // For finalized locations
+  finalizedBy?: {
+    _id: string;
+    username: string;
+    role: string;
+  };
+  finalizedAt?: string;
 }
 
 export interface Suggestion {
-  id: string;
   title: string;
   description: string;
   coordinates: {
     lat: number;
     lng: number;
   };
-  permits: (string | { name: string; required: boolean; notes?: string })[];
-  imageUrl?: string;
-  reasoning?: string;
+  region: string;
+  tags: string[];
+  permits: Array<{
+    name: string;
+    required: boolean;
+    notes?: string;
+  }>;
+  images: string[];
+  confidence: number;
+  createdAt?: string;
 }
 
 export interface Note {
@@ -82,7 +95,7 @@ export interface AddLocationRequest {
       lat: number;
       lng: number;
     };
-    region?: string;
+    region: string;
     tags?: string[];
     permits?: string[];
     images?: string[];
@@ -90,7 +103,7 @@ export interface AddLocationRequest {
 }
 
 export interface AddNoteRequest {
-  content: string;
+  text: string;
   locationId: string;
 }
 

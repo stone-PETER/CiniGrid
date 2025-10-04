@@ -14,6 +14,8 @@ const PotentialLocationsList: React.FC<PotentialLocationsListProps> = ({
   onSelectLocation,
   loading = false,
 }) => {
+  console.log('PotentialLocationsList props:', { locations, selectedLocation, loading });
+  
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
