@@ -3,7 +3,7 @@ import axios from "axios";
 // Create axios instance with base configuration
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
-  timeout: 10000,
+  timeout: 30000, // 30 seconds - AI operations need more time (Google Places + Gemini)
   headers: {
     "Content-Type": "application/json",
   },
