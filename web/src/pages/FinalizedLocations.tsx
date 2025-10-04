@@ -5,17 +5,17 @@ import type { Location } from '../types';
 
 const FinalizedLocations: React.FC = () => {
   const { logout } = useAuth();
-  const { finalizedLocations, locationNotes, loading, error, getFinalized, getPotentialDetail } = useLocations();
+  const { finalizedLocations, locationNotes, loading, error, getFinalizedList, getPotentialDetail } = useLocations();
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
 
   useEffect(() => {
-    getFinalized();
-  }, [getFinalized]);
+    getFinalizedList();
+  }, [getFinalizedList]);
 
   const handleSelectLocation = async (location: Location) => {
     setSelectedLocation(location);
     // Get notes for the selected location
-    await getPotentialDetail(location.id);
+    await getPotentialDetail(location._id);
   };
 
   const openMapInNewTab = (lat: number, lng: number) => {
@@ -96,15 +96,15 @@ const FinalizedLocations: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {finalizedLocations.map((location) => (
               <div 
-                key={location.id} 
+                key={location._id} 
                 className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer"
                 onClick={() => handleSelectLocation(location)}
               >
                 <div className="p-6">
                   {/* Image */}
-                  {location.imageUrl ? (
+                  {location.images && location.images.length > 0 ? (
                     <img 
-                      src={location.imageUrl} 
+                      src={location.images[0]} 
                       alt={location.title}
                       className="w-full h-48 object-cover rounded-lg mb-4"
                     />
@@ -136,7 +136,7 @@ const FinalizedLocations: React.FC = () => {
                             key={index}
                             className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
                           >
-                            {permit}
+                            {permit.name}
                           </span>
                         ))}
                         {location.permits.length > 3 && (
@@ -194,9 +194,9 @@ const FinalizedLocations: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* Left Column - Details */}
                   <div className="space-y-6">
-                    {selectedLocation.imageUrl && (
+                    {selectedLocation.images && selectedLocation.images.length > 0 && (
                       <img 
-                        src={selectedLocation.imageUrl} 
+                        src={selectedLocation.images[0]} 
                         alt={selectedLocation.title}
                         className="w-full h-64 object-cover rounded-lg"
                       />
@@ -216,7 +216,7 @@ const FinalizedLocations: React.FC = () => {
                               key={index}
                               className="inline-block bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full"
                             >
-                              {permit}
+                              {permit.name}
                             </span>
                           ))}
                         </div>

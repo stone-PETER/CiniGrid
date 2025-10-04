@@ -3,7 +3,7 @@ import type { Suggestion } from '../types';
 
 interface SuggestionsListProps {
   suggestions: Suggestion[];
-  onAddToPotential: (suggestion: Suggestion) => void;
+  onAddToPotential: (index: number) => void;
   loading?: boolean;
 }
 
@@ -54,13 +54,13 @@ const SuggestionsList: React.FC<SuggestionsListProps> = ({
         </div>
       ) : (
         <div className="space-y-4 max-h-96 overflow-y-auto">
-          {suggestions.map((suggestion) => (
-            <div key={suggestion.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+          {suggestions.map((suggestion, index) => (
+            <div key={index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
               <div className="flex gap-4">
                 <div className="flex-shrink-0">
-                  {suggestion.imageUrl ? (
+                  {suggestion.images && suggestion.images.length > 0 ? (
                     <img 
-                      src={suggestion.imageUrl} 
+                      src={suggestion.images[0]} 
                       alt={suggestion.title}
                       className="w-20 h-20 object-cover rounded-lg"
                     />
@@ -117,7 +117,7 @@ const SuggestionsList: React.FC<SuggestionsListProps> = ({
                     </button>
                     
                     <button
-                      onClick={() => onAddToPotential(suggestion)}
+                      onClick={() => onAddToPotential(index)}
                       className="bg-indigo-600 text-white text-sm px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
                     >
                       Add to Potential

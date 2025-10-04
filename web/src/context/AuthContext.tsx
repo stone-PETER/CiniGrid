@@ -27,10 +27,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const token = localStorage.getItem('auth_token');
     const userData = localStorage.getItem('user');
     
+    console.log('🔐 Auth Check - Token:', token ? 'exists' : 'none');
+    console.log('🔐 Auth Check - User data:', userData ? 'exists' : 'none');
+    
     if (token && userData) {
       try {
         const parsedUser = JSON.parse(userData);
         setUser({ ...parsedUser, token });
+        console.log('🔐 Auth restored for user:', parsedUser.username);
       } catch (error) {
         console.error('Failed to parse user data:', error);
         localStorage.removeItem('auth_token');
@@ -42,6 +46,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (username: string, password: string, role?: string) => {
     try {
+      console.log('🔐 Attempting login for:', username);
       const response = await authService.login({ username, password, role });
       
       if (response.success && response.data) {
@@ -49,7 +54,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.setItem('auth_token', userData.token || '');
         localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
+        console.log('🔐 Login successful for:', userData.username, 'Role:', userData.role);
       } else {
+        console.log('🔐 Login failed:', response.message);
         throw new Error(response.message || 'Login failed');
       }
     } catch (error) {

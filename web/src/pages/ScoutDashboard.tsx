@@ -6,6 +6,7 @@ import SuggestionsList from '../components/SuggestionsList';
 import PotentialLocationsList from '../components/PotentialLocationsList';
 import PotentialDetailPanel from '../components/PotentialDetailPanel';
 import DirectAddForm from '../components/DirectAddForm';
+import Toast from '../components/Toast';
 
 const ScoutDashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -18,43 +19,68 @@ const ScoutDashboard: React.FC = () => {
     loading,
     error,
     searchAi,
-    addPotential,
+    addPotentialFromSuggestion,
+    addPotentialLocation,
     getPotentialList,
     getPotentialDetail,
     addNote,
     addApproval,
     finalizeLocation,
-    directAdd,
+    directAddToPotential,
+    directAddToFinalized,
+    setSelectedLocation,
     setError,
   } = useLocations();
 
   const [showDirectAddForm, setShowDirectAddForm] = useState(false);
+  const [toast, setToast] = useState<{message: string; type: 'success' | 'error' | 'info'; visible: boolean}>({
+    message: '',
+    type: 'info',
+    visible: false
+  });
 
   useEffect(() => {
     // Load potential locations on component mount
-    getPotentialList();
+    console.log('Loading potential locations...');
+    getPotentialList().then(() => {
+      console.log('Potential locations loaded:', potentialLocations);
+    }).catch(err => {
+      console.error('Failed to load potential locations:', err);
+    });
   }, [getPotentialList]);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    setToast({ message, type, visible: true });
+  };
 
   const handleSearch = async (prompt: string) => {
     await searchAi({ prompt });
   };
 
-  const handleAddToPotential = async (suggestion: any) => {
+  const handleAddToPotential = async (suggestionIndex: number) => {
     try {
-      await addPotential(suggestion);
+      await addPotentialFromSuggestion(suggestionIndex);
     } catch (err) {
       console.error('Failed to add to potential:', err);
     }
   };
 
   const handleSelectLocation = async (location: any) => {
-    await getPotentialDetail(location.id);
+    console.log('Selecting location:', location);
+    try {
+      console.log('Calling getPotentialDetail with ID:', location._id);
+      const result = await getPotentialDetail(location._id);
+      console.log('Got location details:', result);
+    } catch (err) {
+      console.error('Failed to get location details:', err);
+      showToast('Failed to load location details', 'error');
+    }
   };
 
   const handleAddNote = async (content: string) => {
     if (selectedLocation) {
       try {
-        await addNote({ content, locationId: selectedLocation.id });
+        await addNote({ text: content, locationId: selectedLocation._id });
       } catch (err) {
         console.error('Failed to add note:', err);
       }
@@ -64,7 +90,7 @@ const ScoutDashboard: React.FC = () => {
   const handleAddApproval = async (status: 'approved' | 'rejected', notes?: string) => {
     if (selectedLocation) {
       try {
-        await addApproval({ status, notes, locationId: selectedLocation.id });
+        await addApproval({ approved: status === 'approved', comment: notes, locationId: selectedLocation._id });
       } catch (err) {
         console.error('Failed to add approval:', err);
       }
@@ -74,9 +100,14 @@ const ScoutDashboard: React.FC = () => {
   const handleFinalizeLocation = async () => {
     if (selectedLocation) {
       try {
-        await finalizeLocation(selectedLocation.id);
+        await finalizeLocation(selectedLocation._id);
+        setSelectedLocation(null); // Clear selection since it moved to finalized
+        showToast(`Location "${selectedLocation.title}" has been finalized successfully!`, 'success');
+        // Refresh the potential locations list to remove the finalized one
+        getPotentialList();
       } catch (err) {
         console.error('Failed to finalize location:', err);
+        showToast('Failed to finalize location. Please try again.', 'error');
       }
     }
   };
@@ -94,7 +125,21 @@ const ScoutDashboard: React.FC = () => {
     status: 'potential' | 'finalized';
   }) => {
     try {
-      await directAdd(data, data.status);
+      const directAddData = {
+        title: data.manualData.title,
+        description: data.manualData.description,
+        coordinates: data.manualData.coordinates,
+        region: data.manualData.region || '',
+        tags: data.manualData.tags,
+        permits: data.manualData.permits,
+        images: data.manualData.images
+      };
+      
+      if (data.status === 'potential') {
+        await directAddToPotential(directAddData);
+      } else {
+        await directAddToFinalized(directAddData);
+      }
       setShowDirectAddForm(false);
     } catch (err) {
       console.error('Failed to add location directly:', err);
@@ -192,7 +237,11 @@ const ScoutDashboard: React.FC = () => {
         </div>
 
         {/* Detail Panel - Full Width */}
-        {selectedLocation && (
+        {(() => {
+          console.log('📍 Detail Panel Check - selectedLocation:', selectedLocation);
+          console.log('📍 Detail Panel Check - has coordinates:', selectedLocation?.coordinates);
+          return selectedLocation && selectedLocation.coordinates;
+        })() && selectedLocation && (
           <div className="mt-8">
             <PotentialDetailPanel
               location={selectedLocation}
@@ -214,6 +263,14 @@ const ScoutDashboard: React.FC = () => {
         onClose={() => setShowDirectAddForm(false)}
         onSubmit={handleDirectAdd}
         loading={loading}
+      />
+
+      {/* Toast Notifications */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.visible}
+        onClose={() => setToast(prev => ({ ...prev, visible: false }))}
       />
     </div>
   );
