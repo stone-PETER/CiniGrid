@@ -1,0 +1,378 @@
+{
+  "info": {
+    "name": "Location Scouting API",
+    "description": "Complete API collection for the Film Production Location Scouting module",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"test_user\",\n  \"password\": \"password123\",\n  \"role\": \"scout\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"scout_sara\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Suggestions",
+      "item": [
+        {
+          "name": "Search Locations",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prompt\": \"Find historic colonial buildings near water for period drama\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ai/search",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai", "search"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Potential Locations",
+      "item": [
+        {
+          "name": "Add AI Suggestion to Potential",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"suggestionId\": \"0\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/locations/potential",
+              "host": ["{{base_url}}"],
+              "path": ["api", "locations", "potential"]
+            }
+          }
+        },
+        {
+          "name": "Add Manual Data to Potential",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"manualData\": {\n    \"title\": \"Custom Beach Location\",\n    \"description\": \"Beautiful secluded beach perfect for romantic scenes\",\n    \"coordinates\": { \"lat\": 8.5241, \"lng\": 76.9366 },\n    \"region\": \"Trivandrum, Kerala\",\n    \"permits\": [\n      { \"name\": \"Beach Access Permit\", \"required\": true, \"notes\": \"Required from tourism department\" }\n    ],\n    \"images\": [\"https://example.com/beach1.jpg\"],\n    \"tags\": [\"beach\", \"romantic\", \"secluded\"]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/locations/potential",
+              "host": ["{{base_url}}"],
+              "path": ["api", "locations", "potential"]
+            }
+          }
+        },
+        {
+          "name": "Get All Potential Locations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/locations/potential",
+              "host": ["{{base_url}}"],
+              "path": ["api", "locations", "potential"]
+            }
+          }
+        },
+        {
+          "name": "Get Single Potential Location",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/locations/potential/{{location_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "locations", "potential", "{{location_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Finalize Potential Location",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/locations/potential/{{location_id}}/finalize",
+              "host": ["{{base_url}}"],
+              "path": ["api", "locations", "potential", "{{location_id}}", "finalize"]
+            }
+          }
+        },
+        {
+          "name": "Add Note to Potential Location",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"This location looks perfect for the opening scene! The lighting during golden hour would be amazing.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/locations/potential/{{location_id}}/notes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "locations", "potential", "{{location_id}}", "notes"]
+            }
+          }
+        },
+        {
+          "name": "Add Approval to Potential Location",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approved\": true,\n  \"comment\": \"Approved for budget and timeline. Great choice for the romantic subplot.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/locations/potential/{{location_id}}/approvals",
+              "host": ["{{base_url}}"],
+              "path": ["api", "locations", "potential", "{{location_id}}", "approvals"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Finalized Locations",
+      "item": [
+        {
+          "name": "Get All Finalized Locations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/locations/finalized",
+              "host": ["{{base_url}}"],
+              "path": ["api", "locations", "finalized"]
+            }
+          }
+        },
+        {
+          "name": "Add Note to Finalized Location",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Confirmed shooting dates with location owner. Shooting scheduled for March 15-20.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/locations/finalized/{{location_id}}/notes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "locations", "finalized", "{{location_id}}", "notes"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Direct Add",
+      "item": [
+        {
+          "name": "Direct Add to Potential",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Studio Backlot Set\",\n  \"description\": \"Custom built medieval village set in studio backlot\",\n  \"coordinates\": { \"lat\": 19.0760, \"lng\": 72.8777 },\n  \"region\": \"Mumbai, Maharashtra\",\n  \"permits\": [\n    { \"name\": \"Studio Booking\", \"required\": true, \"notes\": \"Book 2 weeks in advance\" },\n    { \"name\": \"Equipment Setup\", \"required\": true, \"notes\": \"Coordinate with studio technical team\" }\n  ],\n  \"images\": [\"https://example.com/studio1.jpg\"],\n  \"tags\": [\"studio\", \"medieval\", \"controlled-environment\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/locations/direct-add/potential",
+              "host": ["{{base_url}}"],
+              "path": ["api", "locations", "direct-add", "potential"]
+            }
+          }
+        },
+        {
+          "name": "Direct Add to Finalized",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Pre-approved Hotel Lobby\",\n  \"description\": \"Luxury hotel lobby with existing filming agreement\",\n  \"coordinates\": { \"lat\": 28.6139, \"lng\": 77.2090 },\n  \"region\": \"New Delhi\",\n  \"permits\": [\n    { \"name\": \"Hotel Agreement\", \"required\": true, \"notes\": \"Already signed, valid for 6 months\" }\n  ],\n  \"images\": [\"https://example.com/hotel1.jpg\"],\n  \"tags\": [\"luxury\", \"indoor\", \"pre-approved\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/locations/direct-add/finalized",
+              "host": ["{{base_url}}"],
+              "path": ["api", "locations", "direct-add", "finalized"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "location_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
