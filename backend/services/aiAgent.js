@@ -165,27 +165,36 @@ Analyze and rank the following filming locations based on their suitability for 
 Locations to analyze:
 ${JSON.stringify(placesData, null, 2)}
 
-Return ONLY a valid JSON array with the top 5 locations (or fewer if less than 5 are suitable). Each location must include:
+CRITICAL JSON FORMATTING RULES:
+1. Return ONLY a valid JSON array - no markdown, no code blocks, no additional text
+2. Each location MUST be a complete, valid JSON object
+3. NO trailing commas after the last property in any object
+4. NO incomplete objects - if you can't complete an object, omit it entirely
+5. All strings must be properly escaped
+6. All photo references must be complete (no truncation)
+7. Limit to maximum 5 locations
+
+Required JSON structure for each location:
 {
   "name": "Location name",
-  "reason": "2-3 sentences explaining why this location is suitable for the scene",
-  "rating": <number 0-10 representing suitability>,
+  "reason": "2-3 sentences explaining suitability",
+  "rating": 8.5,
   "coordinates": {
-    "lat": <latitude>,
-    "lng": <longitude>
+    "lat": 10.123,
+    "lng": 76.456
   },
-  "address": "Full address",
+  "address": "Full address string",
   "placeId": "Google place ID",
-  "photos": [photo objects if available],
-  "types": [location types],
+  "photos": [{"photoReference": "complete_reference", "width": 1920, "height": 1080}],
+  "types": ["type1", "type2"],
   "additionalInfo": {
-    "rating": <Google rating>,
-    "userRatingsTotal": <number>,
-    "priceLevel": <if available>
+    "rating": 4.5,
+    "userRatingsTotal": 100,
+    "priceLevel": 2
   }
 }
 
-Return ONLY the JSON array, no markdown formatting or additional text.`;
+Return ONLY the JSON array starting with [ and ending with ]. Do NOT truncate photo references or any other data.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -211,6 +220,17 @@ Return ONLY the JSON array, no markdown formatting or additional text.`;
     // Clean up any potential issues
     jsonText = jsonText.trim();
 
+    // Additional cleaning: remove trailing commas before closing brackets/braces
+    jsonText = jsonText.replace(/,(\s*[}\]])/g, "$1");
+
+    // Remove any incomplete trailing objects (common AI mistake)
+    const lastCompleteClose = jsonText.lastIndexOf("}");
+    const lastArrayClose = jsonText.lastIndexOf("]");
+    if (lastCompleteClose > lastArrayClose) {
+      // There might be incomplete objects, try to close the array properly
+      jsonText = jsonText.substring(0, lastCompleteClose + 1) + "\n]";
+    }
+
     let rankedLocations;
     try {
       rankedLocations = JSON.parse(jsonText);
@@ -225,19 +245,92 @@ Return ONLY the JSON array, no markdown formatting or additional text.`;
         jsonText.substring(0, 1000)
       );
 
-      // Try to recover by finding a valid JSON array
+      // Try aggressive recovery strategies
       try {
-        // Look for array pattern more aggressively
+        let recoveredJson = null;
+
+        // Strategy 1: Find and extract complete array
         const arrayStart = jsonText.indexOf("[");
         const arrayEnd = jsonText.lastIndexOf("]");
         if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {
-          const potentialJson = jsonText.substring(arrayStart, arrayEnd + 1);
-          rankedLocations = JSON.parse(potentialJson);
-          console.log("✓ Recovered JSON from response");
+          let potentialJson = jsonText.substring(arrayStart, arrayEnd + 1);
+
+          // Strategy 2: Remove trailing commas
+          potentialJson = potentialJson.replace(/,(\s*[}\]])/g, "$1");
+
+          // Strategy 3: Try to find complete objects only
+          const objects = [];
+          let depth = 0;
+          let currentObj = "";
+          let inString = false;
+          let escapeNext = false;
+
+          for (let i = 1; i < potentialJson.length - 1; i++) {
+            const char = potentialJson[i];
+
+            if (escapeNext) {
+              currentObj += char;
+              escapeNext = false;
+              continue;
+            }
+
+            if (char === "\\") {
+              escapeNext = true;
+              currentObj += char;
+              continue;
+            }
+
+            if (char === '"') {
+              inString = !inString;
+            }
+
+            if (!inString) {
+              if (char === "{") {
+                if (depth === 0) currentObj = "";
+                depth++;
+              } else if (char === "}") {
+                depth--;
+                if (depth === 0) {
+                  currentObj += char;
+                  try {
+                    const obj = JSON.parse(currentObj);
+                    objects.push(obj);
+                    currentObj = "";
+                  } catch (e) {
+                    // Skip malformed object
+                    currentObj = "";
+                  }
+                  continue;
+                }
+              }
+            }
+
+            if (depth > 0) {
+              currentObj += char;
+            }
+          }
+
+          if (objects.length > 0) {
+            recoveredJson = objects;
+            console.log(
+              `✓ Recovered ${objects.length} valid objects from malformed JSON`
+            );
+          } else {
+            // Fallback: try direct parse
+            recoveredJson = JSON.parse(potentialJson);
+            console.log("✓ Recovered JSON from response using direct parse");
+          }
+        }
+
+        if (recoveredJson) {
+          rankedLocations = Array.isArray(recoveredJson)
+            ? recoveredJson
+            : [recoveredJson];
         } else {
           throw parseError;
         }
       } catch (recoveryError) {
+        console.error("Recovery also failed:", recoveryError.message);
         throw new Error(
           `Failed to parse AI response as JSON: ${parseError.message}`
         );
