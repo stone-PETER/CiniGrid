@@ -449,6 +449,115 @@ Authorization: Bearer <token>
 }
 ```
 
+### AI-Powered Location Features ✨ NEW
+
+#### Analyze Location Suitability
+
+```http
+POST /api/locations/analyze
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "title": "Urban Rooftop",
+  "description": "Modern city rooftop with skyline views",
+  "region": "Los Angeles",
+  "sceneType": "action sequence"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "analysis": {
+      "suitabilityScore": 8.5,
+      "pros": ["Good accessibility for crew", "Authentic atmosphere"],
+      "cons": ["May require special permits"],
+      "recommendations": [
+        {
+          "name": "Similar Rooftop Location",
+          "reason": "Great for action scenes",
+          "rating": 8.7
+        }
+      ]
+    },
+    "similarLocations": [...],
+    "source": "ai-agent"
+  }
+}
+```
+
+#### Find Similar Locations
+
+```http
+GET /api/locations/:id/similar
+Authorization: Bearer <token>
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "original": {
+      "title": "Sunset Beach",
+      "region": "Malibu, CA"
+    },
+    "suggestions": [
+      {
+        "title": "Paradise Cove",
+        "description": "Similar beach with better facilities",
+        "coordinates": { "lat": 34.0259, "lng": -118.7798 },
+        "rating": 9.0,
+        "confidence": 0.9
+      }
+    ],
+    "count": 5,
+    "source": "ai-agent",
+    "cached": true
+  }
+}
+```
+
+#### AI-Enhanced Location Search
+
+```http
+POST /api/locations/search
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "query": "beach sunset romantic scene",
+  "region": "California",
+  "limit": 10
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "query": "beach sunset romantic scene",
+    "existingLocations": [...],
+    "aiSuggestions": [...],
+    "counts": {
+      "existing": 2,
+      "aiSuggestions": 3,
+      "total": 5
+    },
+    "source": "hybrid"
+  }
+}
+```
+
+> 📖 **Full Documentation**: See [AI_LOCATION_ROUTES.md](./AI_LOCATION_ROUTES.md) for detailed information about AI-powered location features.
+
 #### Get Single Potential Location
 
 ```http

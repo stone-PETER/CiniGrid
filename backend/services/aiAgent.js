@@ -135,6 +135,11 @@ const formatPlacesForAI = (places) => {
  * Use Gemini AI to rank locations based on suitability
  */
 const rankLocationsWithGemini = async (description, places) => {
+  // Re-initialize gemini client if not already done
+  if (!geminiClient && process.env.GEMINI_API_KEY) {
+    geminiClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  }
+
   if (!geminiClient) {
     throw new Error("Gemini API key not configured");
   }
@@ -189,13 +194,55 @@ Return ONLY the JSON array, no markdown formatting or additional text.`;
     // Parse the JSON response
     // Remove markdown code blocks if present
     let jsonText = text.trim();
+
+    // Remove markdown code blocks
     if (jsonText.startsWith("```json")) {
       jsonText = jsonText.replace(/```json\n?/g, "").replace(/```\n?$/g, "");
     } else if (jsonText.startsWith("```")) {
       jsonText = jsonText.replace(/```\n?/g, "").replace(/```\n?$/g, "");
     }
 
-    const rankedLocations = JSON.parse(jsonText);
+    // Find JSON array in the text (in case there's extra text)
+    const jsonMatch = jsonText.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      jsonText = jsonMatch[0];
+    }
+
+    // Clean up any potential issues
+    jsonText = jsonText.trim();
+
+    let rankedLocations;
+    try {
+      rankedLocations = JSON.parse(jsonText);
+    } catch (parseError) {
+      console.error("JSON Parse Error:", parseError.message);
+      console.error(
+        "Received text (first 1000 chars):",
+        text.substring(0, 1000)
+      );
+      console.error(
+        "Cleaned JSON text (first 1000 chars):",
+        jsonText.substring(0, 1000)
+      );
+
+      // Try to recover by finding a valid JSON array
+      try {
+        // Look for array pattern more aggressively
+        const arrayStart = jsonText.indexOf("[");
+        const arrayEnd = jsonText.lastIndexOf("]");
+        if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {
+          const potentialJson = jsonText.substring(arrayStart, arrayEnd + 1);
+          rankedLocations = JSON.parse(potentialJson);
+          console.log("✓ Recovered JSON from response");
+        } else {
+          throw parseError;
+        }
+      } catch (recoveryError) {
+        throw new Error(
+          `Failed to parse AI response as JSON: ${parseError.message}`
+        );
+      }
+    }
 
     // Ensure we only return top 5
     return rankedLocations.slice(0, 5);
@@ -291,28 +338,39 @@ export const findAndRankLocations = async (description, options = {}) => {
 
   const processingTime = Date.now() - startTime;
 
-  // Step 4: Cache the results
-  const recommendation = new AIRecommendation({
-    description,
-    descriptionHash,
-    results: rankedLocations,
-    metadata: {
-      totalPlacesFound: places.length,
-      totalPlacesAnalyzed: placesToAnalyze.length,
-      processingTime,
-      apiCalls: {
-        googlePlaces: places.length > initialPlacesCount ? 2 : 1,
-        gemini: 1,
+  // Step 4: Cache the results (optional - continues if cache fails)
+  let cacheStatus = "not-saved";
+  try {
+    const recommendation = new AIRecommendation({
+      description,
+      descriptionHash,
+      results: rankedLocations,
+      metadata: {
+        totalPlacesFound: places.length,
+        totalPlacesAnalyzed: placesToAnalyze.length,
+        processingTime,
+        apiCalls: {
+          googlePlaces: places.length > initialPlacesCount ? 2 : 1,
+          gemini: 1,
+        },
       },
-    },
-  });
+    });
 
-  await recommendation.save();
-  console.log(`💾 Cached results for future use (expires in 7 days)`);
+    await recommendation.save();
+    console.log(`💾 Cached results for future use (expires in 7 days)`);
+    cacheStatus = "saved";
+  } catch (cacheError) {
+    console.warn(
+      `⚠️  Cache save failed (continuing without cache):`,
+      cacheError.message
+    );
+    cacheStatus = "failed";
+  }
 
   return {
     success: true,
     cached: false,
+    cacheStatus,
     description,
     results: rankedLocations.slice(0, maxResults),
     metadata: {
