@@ -57,9 +57,9 @@ const ScoutDashboard: React.FC = () => {
     await searchAi({ prompt });
   };
 
-  const handleAddToPotential = async (suggestionIndex: number) => {
+  const handleAddToPotential = async (suggestion: any, suggestionIndex: number) => {
     try {
-      await addPotentialFromSuggestion(suggestionIndex);
+      await addPotentialFromSuggestion(suggestion);
     } catch (err) {
       console.error('Failed to add to potential:', err);
     }

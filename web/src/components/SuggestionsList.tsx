@@ -3,7 +3,7 @@ import type { Suggestion } from "../types";
 
 interface SuggestionsListProps {
   suggestions: Suggestion[];
-  onAddToPotential: (index: number) => void;
+  onAddToPotential: (suggestion: Suggestion, index: number) => void;
   loading?: boolean;
 }
 
@@ -293,7 +293,7 @@ const SuggestionsList: React.FC<SuggestionsListProps> = ({
                       </button>
 
                       <button
-                        onClick={() => onAddToPotential(index)}
+                        onClick={() => onAddToPotential(suggestion, index)}
                         className="bg-indigo-600 text-white text-sm px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
                       >
                         Add to Potential

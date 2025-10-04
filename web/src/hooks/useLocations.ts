@@ -31,12 +31,12 @@ export const useLocations = () => {
     }
   }, []);
 
-  // Add potential location from AI suggestion using index
-  const addPotentialFromSuggestion = useCallback(async (suggestionIndex: number) => {
+  // Add potential location from AI suggestion using full suggestion object
+  const addPotentialFromSuggestion = useCallback(async (suggestion: any) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await locationScouting.locations.addPotentialFromSuggestion(suggestionIndex);
+      const response = await locationScouting.locations.addPotentialFromSuggestion(suggestion);
       if (response.success) {
         setPotentialLocations(prev => [...prev, response.data]);
         return response.data;

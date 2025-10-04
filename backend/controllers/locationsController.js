@@ -317,15 +317,42 @@ export const addToPotential = async (req, res) => {
 
       locationData = {
         title: suggestionData.title || suggestionData.name,
+        name: suggestionData.name || suggestionData.title,
         description: suggestionData.description || suggestionData.reason,
+        reason: suggestionData.reason || suggestionData.description,
         coordinates: suggestionData.coordinates,
+        address: suggestionData.address,
         region: suggestionData.region || suggestionData.address,
-        permits: suggestionData.permits || [],
-        images:
-          suggestionData.images ||
-          suggestionData.photos?.map((p) => p.url) ||
-          [],
-        tags: suggestionData.tags || [],
+        
+        // Enhanced fields from hybrid approach
+        rating: suggestionData.rating,
+        verified: suggestionData.verified || false,
+        placeId: suggestionData.placeId,
+        
+        // Images - handle multiple sources
+        images: suggestionData.images || 
+                (suggestionData.photos && suggestionData.photos.map(p => p.url)) || 
+                (suggestionData.imageUrl ? [suggestionData.imageUrl] : []),
+        photos: suggestionData.photos || [],
+        
+        // Tags and types
+        tags: suggestionData.tags || suggestionData.types || [],
+        googleTypes: suggestionData.googleTypes || [],
+        
+        // Filming details
+        filmingDetails: suggestionData.filmingDetails || {},
+        
+        // Permits - ensure proper format
+        permits: (suggestionData.permits || []).map(permit => {
+          if (typeof permit === 'string') {
+            return { name: permit, required: true };
+          }
+          return permit;
+        }),
+        
+        estimatedCost: suggestionData.estimatedCost,
+        mapsLink: suggestionData.mapsLink,
+        
         addedBy: req.user._id,
       };
     } else if (suggestionId) {

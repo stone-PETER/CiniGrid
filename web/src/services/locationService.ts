@@ -141,10 +141,10 @@ export const locationService = {
     );
   },
 
-  addPotentialFromSuggestion: async (suggestionIndex: number): Promise<ApiResponse<Location>> => {
+  addPotentialFromSuggestion: async (suggestion: any): Promise<ApiResponse<Location>> => {
     return apiCall(
-      () => api.post('/locations/potential', { suggestionId: suggestionIndex.toString() }),
-      () => mockApiService.locations.addPotentialLocation({ suggestionId: suggestionIndex.toString() })
+      () => api.post('/locations/potential', { suggestionData: suggestion }),
+      () => mockApiService.locations.addPotentialLocation({ suggestionData: suggestion })
     );
   },
 
@@ -180,8 +180,8 @@ export const locationService = {
     status: "potential" | "finalized" = "potential"
   ): Promise<ApiResponse<Location>> => {
     return apiCall(
-      () => api.post('/locations/direct-add/finalized', locationData),
-      () => mockApiService.locations.directAddLocation({ manualData: locationData }, 'finalized')
+      () => api.post('/locations/direct-add/finalized', location),
+      () => mockApiService.locations.directAddLocation({ manualData: location.manualData }, 'finalized')
     );
   },
 };
@@ -199,7 +199,7 @@ export const notesService = {
     return apiCall(
       () =>
         api.post(`/locations/potential/${noteData.locationId}/notes`, {
-          text: noteData.content,
+          text: noteData.text,
         }),
       () => mockApiService.notes.addNote(noteData)
     );

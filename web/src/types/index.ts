@@ -9,15 +9,55 @@ export interface Location {
   _id: string;
   id?: string; // Alias for _id for compatibility
   title: string;
+  name?: string; // Backend may use 'name' instead of 'title'
   description: string;
+  reason?: string; // Backend may use 'reason' for description
+  address?: string;
   coordinates: {
     lat: number;
     lng: number;
   };
-  permits: (string | { name: string; required?: boolean; notes?: string })[];
+  region?: string;
+  tags?: string[];
+  rating?: number; // Gemini rating 0-10
+  permits: Array<{
+    name: string;
+    required: boolean;
+    notes?: string;
+    estimatedCost?: string;
+    processingTime?: string;
+    authority?: string;
+  }>;
+  filmingDetails?: {
+    accessibility?: string;
+    parking?: string;
+    powerAccess?: string;
+    bestTimeToFilm?: string;
+    crowdLevel?: string;
+    weatherConsiderations?: string;
+  };
+  estimatedCost?: string;
+  images?: string[];
   imageUrl?: string;
-  images?: string[]; // Array of image URLs
-  status: "suggestion" | "potential" | "finalized";
+  photos?: Array<{
+    url: string;
+    width: number;
+    height: number;
+    photoReference: string;
+  }>;
+  confidence?: number;
+  verified?: boolean; // Whether Google Places verified this location
+  placeId?: string; // Google Place ID if verified
+  mapsLink?: string; // Google Maps link if verified
+  googleTypes?: string[];
+  addedBy?: {
+    _id: string;
+    username: string;
+    role: string;
+  };
+  notes?: Note[];
+  approvals?: Approval[];
+  status?: "suggestion" | "potential" | "finalized";
   createdAt: string;
   updatedAt: string;
   // For finalized locations
