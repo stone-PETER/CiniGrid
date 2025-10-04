@@ -1,24 +1,24 @@
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
 export const authMiddleware = async (req, res, next) => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-    
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+
     if (!token) {
       return res.status(401).json({
         success: false,
-        error: 'Access denied. No token provided.'
+        error: "Access denied. No token provided.",
       });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId).select('-password');
-    
+    const user = await User.findById(decoded.userId).select("-password");
+
     if (!user) {
       return res.status(401).json({
         success: false,
-        error: 'Invalid token. User not found.'
+        error: "Invalid token. User not found.",
       });
     }
 
@@ -27,7 +27,7 @@ export const authMiddleware = async (req, res, next) => {
   } catch (error) {
     res.status(401).json({
       success: false,
-      error: 'Invalid token.'
+      error: "Invalid token.",
     });
   }
 };
@@ -37,17 +37,21 @@ export const roleMiddleware = (allowedRoles) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
-        error: 'Authentication required.'
+        error: "Authentication required.",
       });
     }
 
     if (!allowedRoles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
-        error: 'Access denied. Insufficient permissions.'
+        error: "Access denied. Insufficient permissions.",
       });
     }
 
     next();
   };
 };
+
+// Aliases for backward compatibility
+export const protect = authMiddleware;
+export const authorize = (...roles) => roleMiddleware(roles);

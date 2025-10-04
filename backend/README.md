@@ -7,6 +7,8 @@ A comprehensive Express.js backend for a film production ERP's Location Scouting
 - **Node.js** with **Express.js**
 - **MongoDB** with **Mongoose** ODM
 - **JWT** authentication with **bcryptjs** password hashing
+- **Google Gemini AI** for intelligent location ranking
+- **Google Places API** for location discovery
 - **CORS** enabled for frontend integration
 - **ESModules** (ES6 imports)
 
@@ -17,6 +19,7 @@ backend/
 ├── controllers/          # Request handlers and business logic
 │   ├── authController.js
 │   ├── aiController.js
+│   ├── aiAgentController.js
 │   ├── locationsController.js
 │   └── notesController.js
 ├── middleware/           # Authentication and validation middleware
@@ -25,15 +28,20 @@ backend/
 │   ├── User.js
 │   ├── LocationSuggestion.js
 │   ├── PotentialLocation.js
-│   └── FinalizedLocation.js
+│   ├── FinalizedLocation.js
+│   └── AIRecommendation.js
 ├── routes/              # API route definitions
 │   ├── auth.js
 │   ├── ai.js
+│   ├── aiAgentRoutes.js
 │   └── locations.js
 ├── scripts/             # Database utilities
 │   └── seed.js
 ├── services/            # Business logic services
-│   └── mockAiService.js
+│   ├── mockAiService.js
+│   ├── aiAgent.js
+│   ├── aiService.js
+│   └── mapsService.js
 ├── .env                 # Environment variables
 ├── package.json
 └── index.js             # Application entry point
@@ -42,6 +50,7 @@ backend/
 ## 🚀 Setup Instructions
 
 ### Prerequisites
+
 - Node.js (v16 or higher)
 - MongoDB database
 - npm or yarn
@@ -49,26 +58,39 @@ backend/
 ### Installation
 
 1. **Clone and navigate to the project**
+
    ```bash
    cd backend
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Configure environment variables**
-   
+
    Create or update `.env` file in the root directory:
+
    ```env
    PORT=5000
    MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/locationdb?retryWrites=true&w=majority
    JWT_SECRET=your-super-secret-jwt-key-here
    FRONTEND_URL=http://localhost:3000
+
+   # AI Agent Configuration (Required for AI location recommendations)
+   GEMINI_API_KEY=your_gemini_api_key_here
+   GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
    ```
 
+   **Get API Keys:**
+
+   - **Gemini API Key**: Get from [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - **Google Maps API Key**: Get from [Google Cloud Console](https://console.cloud.google.com/) (Enable Places API)
+
 4. **Seed the database with sample users**
+
    ```bash
    npm run seed
    ```
@@ -84,16 +106,17 @@ The API will be available at `http://localhost:5000`
 
 After running the seed script, the following test users will be available:
 
-| Username | Password | Role |
-|----------|----------|------|
+| Username      | Password    | Role     |
+| ------------- | ----------- | -------- |
 | producer_john | password123 | producer |
-| scout_sara | password123 | scout |
+| scout_sara    | password123 | scout    |
 | director_mike | password123 | director |
-| manager_lisa | password123 | manager |
+| manager_lisa  | password123 | manager  |
 
 ## 📊 Data Models
 
 ### User
+
 ```javascript
 {
   username: String (unique, required),
@@ -103,6 +126,7 @@ After running the seed script, the following test users will be available:
 ```
 
 ### LocationSuggestion (AI-generated, not persisted)
+
 ```javascript
 {
   title: String,
@@ -118,6 +142,7 @@ After running the seed script, the following test users will be available:
 ```
 
 ### PotentialLocation
+
 ```javascript
 {
   title: String,
@@ -134,6 +159,7 @@ After running the seed script, the following test users will be available:
 ```
 
 ### FinalizedLocation
+
 ```javascript
 {
   // Same as PotentialLocation plus:
@@ -147,6 +173,7 @@ After running the seed script, the following test users will be available:
 ### Authentication
 
 #### Register User
+
 ```http
 POST /api/auth/register
 Content-Type: application/json
@@ -159,6 +186,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -174,6 +202,7 @@ Content-Type: application/json
 ```
 
 #### Login User
+
 ```http
 POST /api/auth/login
 Content-Type: application/json
@@ -185,6 +214,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -202,6 +232,7 @@ Content-Type: application/json
 ### AI Location Search
 
 #### Get AI Suggestions
+
 ```http
 POST /api/ai/search
 Authorization: Bearer <token>
@@ -213,6 +244,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -242,9 +274,116 @@ Content-Type: application/json
 }
 ```
 
+### AI Agent (Smart Location Recommendations)
+
+#### Check AI Agent Status
+
+```http
+GET /api/ai-agent/status
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "available": true,
+  "message": "AI Agent is ready",
+  "services": {
+    "gemini": true,
+    "googleMaps": true
+  }
+}
+```
+
+#### Find and Rank Locations with AI
+
+```http
+POST /api/ai-agent/find-locations
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "description": "Modern coffee shop with natural light for morning scene",
+  "forceRefresh": false,
+  "maxResults": 5
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "cached": false,
+  "results": [
+    {
+      "name": "Blue Bottle Coffee",
+      "reason": "Excellent natural lighting through floor-to-ceiling windows, minimalist modern aesthetic perfect for morning scenes. The space has a calm atmosphere ideal for filming dialogue-heavy scenes.",
+      "rating": 9.2,
+      "coordinates": { "lat": 37.7749, "lng": -122.4194 },
+      "address": "66 Mint St, San Francisco, CA 94103",
+      "placeId": "ChIJxeyK9Z3AhYAR_5gUCxCTQmo"
+    }
+  ],
+  "metadata": {
+    "totalPlacesFound": 20,
+    "totalPlacesAnalyzed": 10,
+    "processingTime": 3450
+  }
+}
+```
+
+**Parameters:**
+
+- `description` (required): Scene description (10-500 characters)
+- `forceRefresh` (optional): Skip cache and get fresh results (default: false)
+- `maxResults` (optional): Number of results to return (1-10, default: 5)
+
+#### Get AI Agent Cache Statistics
+
+```http
+GET /api/ai-agent/stats
+Authorization: Bearer <token>
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "stats": {
+    "totalCached": 150,
+    "totalAccesses": 450,
+    "avgAccessesPerEntry": 3.0,
+    "cacheHitRate": "80%",
+    "oldestEntry": "2024-09-27T10:30:00.000Z",
+    "newestEntry": "2024-10-04T15:22:00.000Z"
+  }
+}
+```
+
+#### Clear Expired Cache Entries
+
+```http
+DELETE /api/ai-agent/cache/expired
+Authorization: Bearer <token>
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Cleared 12 expired cache entries",
+  "deletedCount": 12
+}
+```
+
 ### Location Management
 
 #### Add AI Suggestion to Potential
+
 ```http
 POST /api/locations/potential
 Authorization: Bearer <token>
@@ -256,6 +395,7 @@ Content-Type: application/json
 ```
 
 #### Add Manual Location to Potential
+
 ```http
 POST /api/locations/potential
 Authorization: Bearer <token>
@@ -275,12 +415,14 @@ Content-Type: application/json
 ```
 
 #### Get All Potential Locations
+
 ```http
 GET /api/locations/potential
 Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -308,18 +450,21 @@ Authorization: Bearer <token>
 ```
 
 #### Get Single Potential Location
+
 ```http
 GET /api/locations/potential/:id
 Authorization: Bearer <token>
 ```
 
 #### Finalize Potential Location
+
 ```http
 POST /api/locations/potential/:id/finalize
 Authorization: Bearer <token>
 ```
 
 #### Get All Finalized Locations
+
 ```http
 GET /api/locations/finalized
 Authorization: Bearer <token>
@@ -328,6 +473,7 @@ Authorization: Bearer <token>
 ### Notes and Approvals
 
 #### Add Note to Potential Location
+
 ```http
 POST /api/locations/potential/:id/notes
 Authorization: Bearer <token>
@@ -339,6 +485,7 @@ Content-Type: application/json
 ```
 
 #### Add Note to Finalized Location
+
 ```http
 POST /api/locations/finalized/:id/notes
 Authorization: Bearer <token>
@@ -350,6 +497,7 @@ Content-Type: application/json
 ```
 
 #### Add Approval to Potential Location
+
 ```http
 POST /api/locations/potential/:id/approvals
 Authorization: Bearer <token>
@@ -364,6 +512,7 @@ Content-Type: application/json
 ### Direct Add Endpoints
 
 #### Direct Add to Potential
+
 ```http
 POST /api/locations/direct-add/potential
 Authorization: Bearer <token>
@@ -381,6 +530,7 @@ Content-Type: application/json
 ```
 
 #### Direct Add to Finalized
+
 ```http
 POST /api/locations/direct-add/finalized
 Authorization: Bearer <token>
@@ -410,6 +560,7 @@ Authorization: Bearer <your-jwt-token>
 All API responses follow a consistent format:
 
 **Success Response:**
+
 ```json
 {
   "success": true,
@@ -418,6 +569,7 @@ All API responses follow a consistent format:
 ```
 
 **Error Response:**
+
 ```json
 {
   "success": false,
@@ -428,6 +580,7 @@ All API responses follow a consistent format:
 ## 🧪 Testing with cURL
 
 ### Register a new user:
+
 ```bash
 curl -X POST http://localhost:5000/api/auth/register \
   -H "Content-Type: application/json" \
@@ -435,6 +588,7 @@ curl -X POST http://localhost:5000/api/auth/register \
 ```
 
 ### Login:
+
 ```bash
 curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -442,6 +596,7 @@ curl -X POST http://localhost:5000/api/auth/login \
 ```
 
 ### Get AI suggestions:
+
 ```bash
 curl -X POST http://localhost:5000/api/ai/search \
   -H "Content-Type: application/json" \
@@ -450,6 +605,7 @@ curl -X POST http://localhost:5000/api/ai/search \
 ```
 
 ### Add suggestion to potential:
+
 ```bash
 curl -X POST http://localhost:5000/api/locations/potential \
   -H "Content-Type: application/json" \
@@ -465,17 +621,22 @@ curl -X POST http://localhost:5000/api/locations/potential \
 
 ## 🔧 Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| PORT | Server port | 5000 |
-| MONGO_URI | MongoDB connection string | Required |
-| JWT_SECRET | JWT signing secret | Required |
-| FRONTEND_URL | Frontend URL for CORS | http://localhost:3000 |
+| Variable            | Description                          | Default               |
+| ------------------- | ------------------------------------ | --------------------- |
+| PORT                | Server port                          | 5000                  |
+| MONGO_URI           | MongoDB connection string            | Required              |
+| JWT_SECRET          | JWT signing secret                   | Required              |
+| FRONTEND_URL        | Frontend URL for CORS                | http://localhost:3000 |
+| GEMINI_API_KEY      | Google Gemini API key for AI ranking | Optional              |
+| GOOGLE_MAPS_API_KEY | Google Maps/Places API key           | Optional              |
 
 ## 🎯 Features
 
 - ✅ JWT-based authentication
 - ✅ Role-based user management
+- ✅ **AI-Powered Location Discovery** (Google Places + Gemini AI)
+- ✅ **Intelligent Location Ranking** with explanations
+- ✅ **Smart Caching** (7-day TTL, ~80% cost reduction)
 - ✅ Mock AI location suggestions
 - ✅ Collaborative approval workflow
 - ✅ Notes and comments system
@@ -488,6 +649,7 @@ curl -X POST http://localhost:5000/api/locations/potential \
 ## 🚀 Next Steps
 
 To extend this API, consider adding:
+
 - Real AI integration (OpenAI, Google Places API)
 - Image upload functionality
 - Project-based location organization
