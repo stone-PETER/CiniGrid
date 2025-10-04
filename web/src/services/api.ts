@@ -1,18 +1,18 @@
-import axios from 'axios';
+import axios from "axios";
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000',
-  timeout: 10000,
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
+  timeout: 30000, // 30 seconds - AI operations need more time (Google Places + Gemini)
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem("auth_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
       console.log('🌐 API Request with auth:', config.method?.toUpperCase(), config.url);
@@ -38,9 +38,9 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       console.log('🌐 Unauthorized - clearing auth and redirecting');
       // Clear token and redirect to login
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
     }
     return Promise.reject(error);
   }

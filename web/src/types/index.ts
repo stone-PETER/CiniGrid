@@ -1,7 +1,7 @@
 export interface User {
   id: string;
   username: string;
-  role: 'producer' | 'director' | 'manager' | 'scout' | 'crew';
+  role: "producer" | "director" | "manager" | "scout" | "crew";
   token?: string;
 }
 
@@ -13,32 +13,9 @@ export interface Location {
     lat: number;
     lng: number;
   };
-  region: string;
-  tags?: string[];
-  permits?: Array<{
-    name: string;
-    required: boolean;
-    notes?: string;
-  }>;
-  images?: string[];
-  addedBy: {
-    _id: string;
-    username: string;
-    role: string;
-  };
-  notes?: Array<{
-    author: string;
-    text: string;
-    role: string;
-    createdAt: string;
-  }>;
-  approvals?: Array<{
-    userId: string;
-    role: string;
-    approved: boolean;
-    comment?: string;
-    createdAt: string;
-  }>;
+  permits: (string | { name: string; required?: boolean; notes?: string })[];
+  imageUrl?: string;
+  status: "suggestion" | "potential" | "finalized";
   createdAt: string;
   updatedAt: string;
   // For finalized locations
@@ -81,7 +58,7 @@ export interface Note {
 export interface Approval {
   id: string;
   role: string;
-  status: 'approved' | 'rejected';
+  status: "approved" | "rejected";
   notes?: string;
   timestamp: string;
   locationId: string;
@@ -106,7 +83,7 @@ export interface LoginRequest {
 export interface RegisterRequest {
   username: string;
   password: string;
-  role: 'producer' | 'director' | 'manager' | 'scout' | 'crew';
+  role: "producer" | "director" | "manager" | "scout" | "crew";
 }
 
 export interface AddLocationRequest {
@@ -131,20 +108,7 @@ export interface AddNoteRequest {
 }
 
 export interface AddApprovalRequest {
-  approved: boolean;
-  comment?: string;
+  status: "approved" | "rejected";
+  notes?: string;
   locationId: string;
-}
-
-export interface DirectAddRequest {
-  title: string;
-  description: string;
-  coordinates: {
-    lat: number;
-    lng: number;
-  };
-  region: string;
-  tags?: string[];
-  permits?: string[];
-  images?: string[];
 }

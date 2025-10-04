@@ -4,10 +4,11 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 // Import routes
-import authRoutes from './routes/auth.js';
-import aiRoutes from './routes/ai.js';
-import locationsRoutes from './routes/locations.js';
-import testRoutes from './routes/test.js';
+import authRoutes from "./routes/auth.js";
+import aiRoutes from "./routes/ai.js";
+import locationsRoutes from "./routes/locations.js";
+import testRoutes from "./routes/test.js";
+import aiAgentRoutes from "./routes/aiAgentRoutes.js";
 
 dotenv.config();
 
@@ -15,11 +16,13 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3001',
-  credentials: true
-}));
-app.use(express.json({ limit: '10mb' }));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:3001",
+    credentials: true,
+  })
+);
+app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
@@ -31,68 +34,70 @@ app.get("/", (req, res) => {
     endpoints: {
       auth: "/api/auth",
       ai: "/api/ai",
-      locations: "/api/locations"
-    }
+      locations: "/api/locations",
+      aiAgent: "/api/ai-agent",
+    },
   });
 });
 
 // API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/ai', aiRoutes);
-app.use('/api/locations', locationsRoutes);
-app.use('/api/test', testRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/ai", aiRoutes);
+app.use("/api/locations", locationsRoutes);
+app.use("/api/test", testRoutes);
+app.use("/api/ai-agent", aiAgentRoutes);
 
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    error: `Route ${req.originalUrl} not found`
+    error: `Route ${req.originalUrl} not found`,
   });
 });
 
 // Global error handler
 app.use((error, req, res, next) => {
-  console.error('Global error handler:', error);
-  
+  console.error("Global error handler:", error);
+
   // Handle mongoose validation errors
-  if (error.name === 'ValidationError') {
-    const errors = Object.values(error.errors).map(err => err.message);
+  if (error.name === "ValidationError") {
+    const errors = Object.values(error.errors).map((err) => err.message);
     return res.status(400).json({
       success: false,
-      error: 'Validation Error',
-      details: errors
+      error: "Validation Error",
+      details: errors,
     });
   }
-  
+
   // Handle mongoose duplicate key errors
   if (error.code === 11000) {
     const field = Object.keys(error.keyValue)[0];
     return res.status(400).json({
       success: false,
-      error: `${field} already exists`
+      error: `${field} already exists`,
     });
   }
-  
+
   // Handle JWT errors
-  if (error.name === 'JsonWebTokenError') {
+  if (error.name === "JsonWebTokenError") {
     return res.status(401).json({
       success: false,
-      error: 'Invalid token'
+      error: "Invalid token",
     });
   }
-  
+
   // Handle mongoose cast errors
-  if (error.name === 'CastError') {
+  if (error.name === "CastError") {
     return res.status(400).json({
       success: false,
-      error: 'Invalid ID format'
+      error: "Invalid ID format",
     });
   }
-  
+
   // Default error
   res.status(500).json({
     success: false,
-    error: 'Internal server error'
+    error: "Internal server error",
   });
 });
 
@@ -100,13 +105,13 @@ app.use((error, req, res, next) => {
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
-    console.log('✅ Connected to MongoDB');
+    console.log("✅ Connected to MongoDB");
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📍 API endpoints available at http://localhost:${PORT}/api`);
     });
   })
   .catch((err) => {
-    console.error('❌ MongoDB connection error:', err);
+    console.error("❌ MongoDB connection error:", err);
     process.exit(1);
   });

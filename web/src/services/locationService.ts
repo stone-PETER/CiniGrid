@@ -1,5 +1,5 @@
-import api from './api';
-import { mockApiService } from './mockApi';
+import api from "./api";
+import { mockApiService } from "./mockApi";
 import type {
   User,
   Location,
@@ -13,11 +13,10 @@ import type {
   AddLocationRequest,
   AddNoteRequest,
   AddApprovalRequest,
-  DirectAddRequest,
-} from '../types';
+} from "../types";
 
 // Check if we should use mock API (when backend is not available)
-const USE_MOCK_API = import.meta.env.VITE_USE_MOCK_API === 'true';
+const USE_MOCK_API = import.meta.env.VITE_USE_MOCK_API === "true";
 
 // Helper function to handle API calls with fallback to mock
 const apiCall = async <T>(
@@ -37,7 +36,7 @@ const apiCall = async <T>(
     return response.data;
   } catch (error) {
     // Fallback to mock API if real API fails
-    console.warn('Real API failed, falling back to mock API:', error);
+    console.warn("Real API failed, falling back to mock API:", error);
     try {
       return await mockApiCall();
     } catch (mockError) {
@@ -50,14 +49,14 @@ const apiCall = async <T>(
 export const authService = {
   login: async (credentials: LoginRequest): Promise<ApiResponse<User>> => {
     return apiCall(
-      () => api.post('/auth/login', credentials),
+      () => api.post("/auth/login", credentials),
       () => mockApiService.auth.login(credentials)
     );
   },
 
   register: async (userData: RegisterRequest): Promise<ApiResponse<User>> => {
     return apiCall(
-      () => api.post('/auth/register', userData),
+      () => api.post("/auth/register", userData),
       () => mockApiService.auth.register(userData)
     );
   },
@@ -67,30 +66,35 @@ export const authService = {
       await mockApiService.auth.logout();
     } else {
       try {
-        await api.post('/auth/logout');
+        await api.post("/auth/logout");
       } catch (error) {
-        console.warn('Logout API call failed:', error);
+        console.warn("Logout API call failed:", error);
       }
     }
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user');
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("user");
   },
 };
 
 // AI search endpoints
 export const aiService = {
-  searchLocations: async (searchRequest: SearchRequest): Promise<ApiResponse<Suggestion[]>> => {
+  searchLocations: async (
+    searchRequest: SearchRequest
+  ): Promise<ApiResponse<Suggestion[]>> => {
     return apiCall(
       async () => {
-        const response = await api.post('/ai/search', searchRequest);
+        // AI operations need extra time: Google Places API + Gemini ranking
+        const response = await api.post("/ai/search", searchRequest, {
+          timeout: 45000, // 45 seconds for AI operations
+        });
         // Backend returns { success: true, data: { suggestions: [], count: 3 } }
         // Frontend expects { success: true, data: [] }
         return {
           data: {
             success: response.data.success,
             data: response.data.data.suggestions || [],
-            message: response.data.message
-          }
+            message: response.data.message,
+          },
         };
       },
       () => mockApiService.ai.searchLocations(searchRequest)
@@ -104,31 +108,35 @@ export const locationService = {
   getPotentialLocations: async (): Promise<ApiResponse<Location[]>> => {
     return apiCall(
       async () => {
-        const response = await api.get('/locations/potential');
+        const response = await api.get("/locations/potential");
         // Backend returns { success: true, data: { locations: [], count: 0 } }
         // Frontend expects { success: true, data: [] }
         return {
           data: {
             success: response.data.success,
             data: response.data.data.locations || [],
-            message: response.data.message
-          }
+            message: response.data.message,
+          },
         };
       },
       () => mockApiService.locations.getPotentialLocations()
     );
   },
 
-  getPotentialLocationDetail: async (id: string): Promise<ApiResponse<Location>> => {
+  getPotentialLocationDetail: async (
+    id: string
+  ): Promise<ApiResponse<Location>> => {
     return apiCall(
       () => api.get(`/locations/potential/${id}`),
       () => mockApiService.locations.getPotentialLocationDetail(id)
     );
   },
 
-  addPotentialLocation: async (locationData: AddLocationRequest): Promise<ApiResponse<Location>> => {
+  addPotentialLocation: async (
+    locationData: AddLocationRequest
+  ): Promise<ApiResponse<Location>> => {
     return apiCall(
-      () => api.post('/locations/potential', locationData),
+      () => api.post("/locations/potential", locationData),
       () => mockApiService.locations.addPotentialLocation(locationData)
     );
   },
@@ -144,15 +152,15 @@ export const locationService = {
   getFinalizedLocations: async (): Promise<ApiResponse<Location[]>> => {
     return apiCall(
       async () => {
-        const response = await api.get('/locations/finalized');
+        const response = await api.get("/locations/finalized");
         // Backend returns { success: true, data: { locations: [], count: 0 } }
         // Frontend expects { success: true, data: [] }
         return {
           data: {
             success: response.data.success,
             data: response.data.data.locations || [],
-            message: response.data.message
-          }
+            message: response.data.message,
+          },
         };
       },
       () => mockApiService.locations.getFinalizedLocations()
@@ -166,15 +174,11 @@ export const locationService = {
     );
   },
 
-  // Direct add endpoints
-  directAddToPotential: async (locationData: DirectAddRequest): Promise<ApiResponse<Location>> => {
-    return apiCall(
-      () => api.post('/locations/direct-add/potential', locationData),
-      () => mockApiService.locations.directAddLocation({ manualData: locationData }, 'potential')
-    );
-  },
-
-  directAddToFinalized: async (locationData: DirectAddRequest): Promise<ApiResponse<Location>> => {
+  // Direct add
+  directAddLocation: async (
+    location: AddLocationRequest,
+    status: "potential" | "finalized" = "potential"
+  ): Promise<ApiResponse<Location>> => {
     return apiCall(
       () => api.post('/locations/direct-add/finalized', locationData),
       () => mockApiService.locations.directAddLocation({ manualData: locationData }, 'finalized')
@@ -193,14 +197,10 @@ export const notesService = {
 
   addNote: async (noteData: AddNoteRequest): Promise<ApiResponse<Note>> => {
     return apiCall(
-      () => api.post(`/locations/potential/${noteData.locationId}/notes`, { text: noteData.text }),
-      () => mockApiService.notes.addNote(noteData)
-    );
-  },
-
-  addFinalizedNote: async (noteData: AddNoteRequest): Promise<ApiResponse<Note>> => {
-    return apiCall(
-      () => api.post(`/locations/finalized/${noteData.locationId}/notes`, { text: noteData.text }),
+      () =>
+        api.post(`/locations/potential/${noteData.locationId}/notes`, {
+          text: noteData.content,
+        }),
       () => mockApiService.notes.addNote(noteData)
     );
   },
@@ -208,19 +208,24 @@ export const notesService = {
 
 // Approvals endpoints
 export const approvalsService = {
-  getApprovals: async (locationId: string): Promise<ApiResponse<Approval[]>> => {
+  getApprovals: async (
+    locationId: string
+  ): Promise<ApiResponse<Approval[]>> => {
     return apiCall(
       () => api.get(`/locations/potential/${locationId}/approvals`),
       () => mockApiService.approvals.getApprovals(locationId)
     );
   },
 
-  addApproval: async (approvalData: AddApprovalRequest): Promise<ApiResponse<Approval>> => {
+  addApproval: async (
+    approvalData: AddApprovalRequest
+  ): Promise<ApiResponse<Approval>> => {
     return apiCall(
-      () => api.post(`/locations/potential/${approvalData.locationId}/approvals`, { 
-        approved: approvalData.approved, 
-        comment: approvalData.comment 
-      }),
+      () =>
+        api.post(`/locations/potential/${approvalData.locationId}/approvals`, {
+          approved: approvalData.status === "approved",
+          comment: approvalData.notes,
+        }),
       () => mockApiService.approvals.addApproval(approvalData)
     );
   },
