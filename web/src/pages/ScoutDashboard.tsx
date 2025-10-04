@@ -161,19 +161,22 @@ const ScoutDashboard: React.FC = () => {
             <div className="flex gap-4">
               <a
                 href="/finalized"
-                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                className="px-4 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 font-medium transition-opacity"
+                style={{ backgroundColor: '#FCCA00', color: '#1F1F1F' }}
               >
                 View Finalized
               </a>
               <button
                 onClick={() => setShowDirectAddForm(true)}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                className="px-4 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 font-medium transition-opacity"
+                style={{ backgroundColor: '#1F1F1F', color: '#FCCA00' }}
               >
                 Add Location
               </button>
               <button
                 onClick={logout}
-                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                className="px-4 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 font-medium transition-opacity"
+                style={{ backgroundColor: '#1F1F1F', color: '#FCCA00' }}
               >
                 Logout
               </button>

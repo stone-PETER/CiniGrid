@@ -39,7 +39,7 @@ const BoardScreen: React.FC = () => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'High': return '#FF4444';
-      case 'Medium': return '#FCCA00';
+      case 'Medium': return '#FF9800';
       case 'Low': return '#4CAF50';
       default: return '#7A7A7A';
     }
@@ -48,7 +48,7 @@ const BoardScreen: React.FC = () => {
   const getTypeGradient = (type: string) => {
     return type === 'scene' 
       ? 'linear-gradient(135deg, #D0D0D0 0%, #FFFFFF 100%)'
-      : 'linear-gradient(135deg, #FCCA00 0%, #FFE066 100%)';
+      : 'linear-gradient(135deg, #F5F5DC 0%, #FDF5E6 100%)';
   };
 
   return (

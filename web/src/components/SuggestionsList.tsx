@@ -268,7 +268,8 @@ const SuggestionsList: React.FC<SuggestionsListProps> = ({
                     <div className="mt-3 flex items-center justify-between">
                       <button
                         onClick={() => openMapInNewTab(suggestion)}
-                        className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                        className="text-sm px-3 py-1 rounded hover:opacity-80 flex items-center gap-1 font-medium transition-opacity"
+                        style={{ backgroundColor: '#FCCA00', color: '#1F1F1F' }}
                       >
                         <svg
                           className="w-4 h-4"
@@ -294,7 +295,8 @@ const SuggestionsList: React.FC<SuggestionsListProps> = ({
 
                       <button
                         onClick={() => onAddToPotential(suggestion, index)}
-                        className="bg-indigo-600 text-white text-sm px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
+                        className="text-sm px-4 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-opacity font-medium"
+                        style={{ backgroundColor: '#1F1F1F', color: '#FCCA00' }}
                       >
                         Add to Potential
                       </button>

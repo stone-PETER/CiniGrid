@@ -63,7 +63,7 @@ const ScenesScreen: React.FC = () => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'High': return '#FF4444';
-      case 'Medium': return '#FCCA00';
+      case 'Medium': return '#FF9800';
       case 'Low': return '#4CAF50';
       default: return '#7A7A7A';
     }
@@ -72,7 +72,7 @@ const ScenesScreen: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Completed': return '#4CAF50';
-      case 'In Progress': return '#FCCA00';
+      case 'In Progress': return '#FF9800';
       case 'Scheduled': return '#2196F3';
       case 'Planning': return '#7A7A7A';
       default: return '#7A7A7A';

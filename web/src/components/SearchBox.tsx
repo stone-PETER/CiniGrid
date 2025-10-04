@@ -40,7 +40,8 @@ const SearchBox: React.FC<SearchBoxProps> = ({ onSearch, loading = false }) => {
         <button
           type="submit"
           disabled={!prompt.trim() || loading}
-          className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full py-2 px-4 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity font-medium"
+          style={{ backgroundColor: '#1F1F1F', color: '#FCCA00' }}
         >
           {loading ? "Searching with AI..." : "Search Locations"}
         </button>

@@ -167,8 +167,15 @@ const LocationsScreen: React.FC = () => {
 
         {/* Center Panel - Search & Suggestions (2/4) */}
         <div className="w-2/4 flex flex-col">
+          {/* Search Box Header */}
+          <div className="p-4 border-b" style={{ borderColor: '#D0D0D0', backgroundColor: '#1F1F1F' }}>
+            <h2 className="text-lg font-bold" style={{ color: '#FCCA00' }}>
+              Search Locations
+            </h2>
+          </div>
+          
           {/* Search Box */}
-          <div className="p-4 border-b" style={{ borderColor: '#D0D0D0', backgroundColor: '#FCCA00' }}>
+          <div className="p-4 border-b" style={{ borderColor: '#D0D0D0' }}>
             <SearchBox onSearch={handleSearch} loading={loading} />
           </div>
           

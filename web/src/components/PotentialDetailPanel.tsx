@@ -72,7 +72,8 @@ const PotentialDetailPanel: React.FC<PotentialDetailPanelProps> = ({
               hasRequiredApprovals ? (
                 <button
                   onClick={() => setShowFinalizeConfirm(true)}
-                  className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm font-medium transition-colors"
+                  className="px-4 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-sm font-medium transition-opacity"
+                  style={{ backgroundColor: '#1F1F1F', color: '#FCCA00' }}
                 >
                   ✓ Finalize Location
                 </button>
@@ -333,7 +334,8 @@ const PotentialDetailPanel: React.FC<PotentialDetailPanelProps> = ({
                   <div className="flex gap-2">
                     <button
                       onClick={openMapInNewTab}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm flex items-center gap-2"
+                      className="px-4 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-sm flex items-center gap-2 font-medium transition-opacity"
+                      style={{ backgroundColor: '#FCCA00', color: '#1F1F1F' }}
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -346,7 +348,8 @@ const PotentialDetailPanel: React.FC<PotentialDetailPanelProps> = ({
                         href={location.mapsLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm flex items-center gap-2"
+                        className="px-4 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-sm flex items-center gap-2 font-medium transition-opacity"
+                        style={{ backgroundColor: '#1F1F1F', color: '#FCCA00' }}
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -380,7 +383,8 @@ const PotentialDetailPanel: React.FC<PotentialDetailPanelProps> = ({
                 <button
                   type="submit"
                   disabled={!newNote.trim() || loading}
-                  className="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 text-sm"
+                  className="mt-2 px-4 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 text-sm font-medium transition-opacity"
+                  style={{ backgroundColor: '#1F1F1F', color: '#FCCA00' }}
                 >
                   Add Note
                 </button>
@@ -443,14 +447,16 @@ const PotentialDetailPanel: React.FC<PotentialDetailPanelProps> = ({
                         <button
                           onClick={() => handleApproval('approved')}
                           disabled={loading}
-                          className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 text-sm"
+                          className="px-4 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 text-sm font-medium transition-opacity"
+                          style={{ backgroundColor: '#FCCA00', color: '#1F1F1F' }}
                         >
                           Approve
                         </button>
                         <button
                           onClick={() => handleApproval('rejected')}
                           disabled={loading}
-                          className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 text-sm"
+                          className="px-4 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 text-sm font-medium transition-opacity"
+                          style={{ backgroundColor: '#1F1F1F', color: '#FCCA00' }}
                         >
                           Reject
                         </button>
@@ -501,14 +507,16 @@ const PotentialDetailPanel: React.FC<PotentialDetailPanelProps> = ({
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowFinalizeConfirm(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                className="px-4 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 font-medium transition-opacity"
+                style={{ backgroundColor: '#FCCA00', color: '#1F1F1F' }}
               >
                 Cancel
               </button>
               <button
                 onClick={handleFinalize}
                 disabled={loading}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
+                className="px-4 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 font-medium transition-opacity"
+                style={{ backgroundColor: '#1F1F1F', color: '#FCCA00' }}
               >
                 Finalize
               </button>

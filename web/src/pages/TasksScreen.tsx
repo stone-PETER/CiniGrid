@@ -86,7 +86,7 @@ const TasksScreen: React.FC = () => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'High': return '#FF4444';
-      case 'Medium': return '#FCCA00';
+      case 'Medium': return '#FF9800';
       case 'Low': return '#4CAF50';
       default: return '#7A7A7A';
     }
@@ -95,7 +95,7 @@ const TasksScreen: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Completed': return '#4CAF50';
-      case 'In Progress': return '#FCCA00';
+      case 'In Progress': return '#FF9800';
       case 'Scheduled': return '#2196F3';
       case 'Planning': return '#7A7A7A';
       default: return '#7A7A7A';
@@ -125,7 +125,7 @@ const TasksScreen: React.FC = () => {
             key={task.id}
             className="p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
             style={{ 
-              background: 'linear-gradient(135deg, #FCCA00 0%, #FFE066 100%)',
+              background: 'linear-gradient(135deg, #F5F5DC 0%, #FDF5E6 100%)',
               border: '1px solid #7A7A7A'
             }}
           >
@@ -175,7 +175,7 @@ const TasksScreen: React.FC = () => {
                           <span 
                             key={index}
                             className="text-xs px-2 py-1 rounded"
-                            style={{ backgroundColor: '#1F1F1F', color: '#FCCA00' }}
+                            style={{ backgroundColor: '#F5F5DC', color: '#1F1F1F' }}
                           >
                             {user}
                           </span>
