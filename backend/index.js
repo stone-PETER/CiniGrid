@@ -9,6 +9,7 @@ import aiRoutes from "./routes/ai.js";
 import locationsRoutes from "./routes/locations.js";
 import testRoutes from "./routes/test.js";
 import aiAgentRoutes from "./routes/aiAgentRoutes.js";
+import testGeminiOnlyRoutes from "./routes/testGeminiOnly.js";
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.get("/", (req, res) => {
       ai: "/api/ai",
       locations: "/api/locations",
       aiAgent: "/api/ai-agent",
+      testGeminiOnly: "/api/ai/test-gemini-only (🧪 No Google Places API)",
     },
   });
 });
@@ -43,6 +45,7 @@ app.get("/", (req, res) => {
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/ai", testGeminiOnlyRoutes); // Test routes under /api/ai
 app.use("/api/locations", locationsRoutes);
 app.use("/api/test", testRoutes);
 app.use("/api/ai-agent", aiAgentRoutes);
