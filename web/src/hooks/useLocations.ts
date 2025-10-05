@@ -133,6 +133,21 @@ export const useLocations = () => {
         const locationData = (response.data as any).location || response.data;
         console.log("📍 Setting selected location:", locationData);
         setSelectedLocation(locationData);
+
+        // Extract and store notes if they exist in the location data
+        if (locationData.notes && Array.isArray(locationData.notes)) {
+          setLocationNotes(locationData.notes);
+        } else {
+          setLocationNotes([]);
+        }
+
+        // Extract and store approvals if they exist in the location data
+        if (locationData.approvals && Array.isArray(locationData.approvals)) {
+          setLocationApprovals(locationData.approvals);
+        } else {
+          setLocationApprovals([]);
+        }
+
         return locationData;
       } else {
         throw new Error(response.message || "Failed to fetch location details");

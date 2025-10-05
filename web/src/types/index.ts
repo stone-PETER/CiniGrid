@@ -117,12 +117,17 @@ export interface Suggestion {
 }
 
 export interface Note {
-  id: string;
-  content: string;
-  author: string;
+  _id: string;
+  text: string;
+  author?: {
+    _id: string;
+    username: string;
+    role: string;
+  };
   role: string;
-  timestamp: string;
-  locationId: string;
+  createdAt: string;
+  updatedAt: string;
+  locationId?: string;
 }
 
 export interface Approval {

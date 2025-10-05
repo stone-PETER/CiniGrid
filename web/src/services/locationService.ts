@@ -259,13 +259,28 @@ export const notesService = {
   },
 
   addNote: async (noteData: AddNoteRequest): Promise<ApiResponse<Note>> => {
-    return apiCall(
+    const response = await apiCall(
       () =>
         api.post(`/locations/potential/${noteData.locationId}/notes`, {
           text: noteData.text,
         }),
       () => mockApiService.notes.addNote(noteData)
     );
+
+    // Backend returns { note: {...}, location: {...} }, extract just the note
+    if (
+      response.success &&
+      response.data &&
+      typeof response.data === "object" &&
+      "note" in response.data
+    ) {
+      return {
+        success: true,
+        data: (response.data as any).note,
+      };
+    }
+
+    return response;
   },
 };
 

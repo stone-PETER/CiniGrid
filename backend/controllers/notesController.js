@@ -1,5 +1,5 @@
-import PotentialLocation from '../models/PotentialLocation.js';
-import FinalizedLocation from '../models/FinalizedLocation.js';
+import PotentialLocation from "../models/PotentialLocation.js";
+import FinalizedLocation from "../models/FinalizedLocation.js";
 
 // Add note to potential location
 export const addNoteToPotential = async (req, res) => {
@@ -10,7 +10,7 @@ export const addNoteToPotential = async (req, res) => {
     if (!text || text.trim().length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'Note text is required.'
+        error: "Note text is required.",
       });
     }
 
@@ -18,34 +18,37 @@ export const addNoteToPotential = async (req, res) => {
     if (!location) {
       return res.status(404).json({
         success: false,
-        error: 'Potential location not found.'
+        error: "Potential location not found.",
       });
     }
+
+    // Get user's role - either from user object or default to 'owner' if not set
+    const userRole = req.user.role || "owner";
 
     const note = {
       author: req.user._id,
       text: text.trim(),
-      role: req.user.role,
-      createdAt: new Date()
+      role: userRole,
+      createdAt: new Date(),
     };
 
     location.notes.push(note);
     await location.save();
 
-    await location.populate('notes.author', 'username role');
+    await location.populate("notes.author", "username role");
 
     res.status(201).json({
       success: true,
-      data: { 
+      data: {
         note: location.notes[location.notes.length - 1],
-        location: location
-      }
+        location: location,
+      },
     });
   } catch (error) {
-    console.error('Add note to potential error:', error);
+    console.error("Add note to potential error:", error);
     res.status(500).json({
       success: false,
-      error: 'Internal server error while adding note.'
+      error: "Internal server error while adding note.",
     });
   }
 };
@@ -59,7 +62,7 @@ export const addNoteToFinalized = async (req, res) => {
     if (!text || text.trim().length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'Note text is required.'
+        error: "Note text is required.",
       });
     }
 
@@ -67,34 +70,36 @@ export const addNoteToFinalized = async (req, res) => {
     if (!location) {
       return res.status(404).json({
         success: false,
-        error: 'Finalized location not found.'
+        error: "Finalized location not found.",
       });
     }
+
+    const userRole = req.user.role || "owner";
 
     const note = {
       author: req.user._id,
       text: text.trim(),
-      role: req.user.role,
-      createdAt: new Date()
+      role: userRole,
+      createdAt: new Date(),
     };
 
     location.notes.push(note);
     await location.save();
 
-    await location.populate('notes.author', 'username role');
+    await location.populate("notes.author", "username role");
 
     res.status(201).json({
       success: true,
-      data: { 
+      data: {
         note: location.notes[location.notes.length - 1],
-        location: location
-      }
+        location: location,
+      },
     });
   } catch (error) {
-    console.error('Add note to finalized error:', error);
+    console.error("Add note to finalized error:", error);
     res.status(500).json({
       success: false,
-      error: 'Internal server error while adding note.'
+      error: "Internal server error while adding note.",
     });
   }
 };
@@ -105,10 +110,10 @@ export const addApprovalToPotential = async (req, res) => {
     const { id } = req.params;
     const { approved, comment } = req.body;
 
-    if (typeof approved !== 'boolean') {
+    if (typeof approved !== "boolean") {
       return res.status(400).json({
         success: false,
-        error: 'Approved field is required and must be a boolean.'
+        error: "Approved field is required and must be a boolean.",
       });
     }
 
@@ -116,19 +121,19 @@ export const addApprovalToPotential = async (req, res) => {
     if (!location) {
       return res.status(404).json({
         success: false,
-        error: 'Potential location not found.'
+        error: "Potential location not found.",
       });
     }
 
     // Check if user has already provided approval
     const existingApproval = location.approvals.find(
-      approval => approval.userId.toString() === req.user._id.toString()
+      (approval) => approval.userId.toString() === req.user._id.toString()
     );
 
     if (existingApproval) {
       // Update existing approval
       existingApproval.approved = approved;
-      existingApproval.comment = comment || '';
+      existingApproval.comment = comment || "";
       existingApproval.createdAt = new Date();
     } else {
       // Add new approval
@@ -136,29 +141,30 @@ export const addApprovalToPotential = async (req, res) => {
         userId: req.user._id,
         role: req.user.role,
         approved,
-        comment: comment || '',
-        createdAt: new Date()
+        comment: comment || "",
+        createdAt: new Date(),
       };
       location.approvals.push(approval);
     }
 
     await location.save();
-    await location.populate('approvals.userId', 'username role');
+    await location.populate("approvals.userId", "username role");
 
-    const addedOrUpdatedApproval = existingApproval || location.approvals[location.approvals.length - 1];
+    const addedOrUpdatedApproval =
+      existingApproval || location.approvals[location.approvals.length - 1];
 
     res.status(201).json({
       success: true,
-      data: { 
+      data: {
         approval: addedOrUpdatedApproval,
-        location: location
-      }
+        location: location,
+      },
     });
   } catch (error) {
-    console.error('Add approval to potential error:', error);
+    console.error("Add approval to potential error:", error);
     res.status(500).json({
       success: false,
-      error: 'Internal server error while adding approval.'
+      error: "Internal server error while adding approval.",
     });
   }
 };
