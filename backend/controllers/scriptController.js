@@ -233,6 +233,7 @@ export const getScriptAnalysis = async (req, res) => {
         data: {
           hasScript: false,
           message: "No screenplay uploaded yet",
+          isOwner, // ✅ Added isOwner field
         },
       });
     }
