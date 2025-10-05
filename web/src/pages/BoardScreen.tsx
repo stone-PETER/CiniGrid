@@ -30,6 +30,9 @@ const BoardScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  // State for move functionality
+  const [showMoveDropdown, setShowMoveDropdown] = useState<string | null>(null);
+  
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createType, setCreateType] = useState<'scene' | 'task'>('scene');
@@ -61,6 +64,21 @@ const BoardScreen: React.FC = () => {
   useEffect(() => {
     loadBoardData();
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.move-dropdown-container')) {
+        setShowMoveDropdown(null);
+      }
+    };
+
+    if (showMoveDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showMoveDropdown]);
 
   // Convert scenes and tasks to kanban cards
   const getCardsForColumn = (columnName: string): KanbanCard[] => {
@@ -270,22 +288,41 @@ const BoardScreen: React.FC = () => {
                       {card.time && <div>{card.time}</div>}
                     </div>
                     
-                    {/* Quick status change buttons */}
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="flex gap-1">
-                        {columns.filter(col => col !== columnName).slice(0, 2).map(status => (
-                          <button
-                            key={status}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStatusChange(card._id, card.type, status);
-                            }}
-                            className="text-xs px-1 py-0.5 rounded bg-black text-white hover:bg-gray-800"
-                            title={`Move to ${formatColumnName(status)}`}
-                          >
-                            {status === 'in review' ? 'Review' : status.charAt(0).toUpperCase()}
-                          </button>
-                        ))}
+                    {/* Move button with dropdown */}
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity move-dropdown-container">
+                      <div className="relative">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowMoveDropdown(showMoveDropdown === card._id ? null : card._id);
+                          }}
+                          className="text-xs px-2 py-1 rounded bg-black text-white hover:bg-gray-800 flex items-center gap-1"
+                          title="Move to different queue"
+                        >
+                          Move
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        
+                        {/* Dropdown menu */}
+                        {showMoveDropdown === card._id && (
+                          <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-10 min-w-[120px]">
+                            {columns.filter(col => col !== columnName).map(status => (
+                              <button
+                                key={status}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStatusChange(card._id, card.type, status);
+                                  setShowMoveDropdown(null);
+                                }}
+                                className="block w-full text-left px-3 py-2 text-xs hover:bg-gray-100 text-gray-700 first:rounded-t-md last:rounded-b-md"
+                              >
+                                {formatColumnName(status)}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
