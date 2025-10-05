@@ -1,263 +1,603 @@
-import React, { useState } from 'react';
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  time: string;
-  date: string;
-  priority: 'High' | 'Medium' | 'Low';
-  location?: string;
-  dependencies?: string[];
-  users?: string[];
-  resources?: string[];
-  status: string;
-}
+import React, { useState, useEffect } from 'react';
+import { taskService } from '../services/productionService';
+import type { Task, CreateTaskRequest } from '../types';
 
 const TasksScreen: React.FC = () => {
-  const [tasks] = useState<Task[]>([
-    {
-      id: '1',
-      title: 'Equipment Setup and Sound Check',
-      description: 'Set up all camera equipment, lighting rigs, and conduct comprehensive sound checks',
-      time: '08:00',
-      date: '2025-10-10',
-      priority: 'High',
-      location: 'Malibu Beach',
-      dependencies: ['Equipment delivery', 'Location access'],
-      users: ['John (Camera)', 'Sarah (Sound)', 'Mike (Lighting)'],
-      resources: ['4K Cameras x3', 'Lighting Kit', 'Sound Equipment', 'Generator'],
-      status: 'Scheduled'
-    },
-    {
-      id: '2',
-      title: 'Talent Makeup and Wardrobe',
-      description: 'Complete makeup application and wardrobe fitting for all main cast',
-      time: '09:30',
-      date: '2025-10-10',
-      priority: 'Medium',
-      location: 'Mobile Trailer',
-      dependencies: ['Talent arrival', 'Wardrobe confirmation'],
-      users: ['Lisa (Makeup)', 'Tom (Wardrobe)', 'Assistant x2'],
-      resources: ['Makeup Kit', 'Wardrobe Set A', 'Mirrors', 'Chairs'],
-      status: 'In Progress'
-    },
-    {
-      id: '3',
-      title: 'Location Security and Crowd Control',
-      description: 'Ensure location perimeter security and manage crowd control during filming',
-      time: '07:00',
-      date: '2025-10-11',
-      priority: 'High',
-      location: 'Downtown Cafe',
-      dependencies: ['Police permits', 'Security briefing'],
-      users: ['Security Team x4', 'Production Assistant x2'],
-      resources: ['Barriers', 'Walkie-talkies', 'Signage'],
-      status: 'Planning'
-    },
-    {
-      id: '4',
-      title: 'Post-Production Data Backup',
-      description: 'Backup all footage and audio files to multiple storage systems',
-      time: '18:00',
-      date: '2025-10-11',
-      priority: 'High',
-      location: 'Production Office',
-      dependencies: ['Filming completion', 'Storage systems ready'],
-      users: ['Data Manager', 'IT Support'],
-      resources: ['External Drives x3', 'Cloud Storage', 'Backup Server'],
-      status: 'Scheduled'
-    },
-    {
-      id: '5',
-      title: 'Catering and Craft Services',
-      description: 'Provide meals and refreshments for cast and crew throughout the day',
-      time: '06:30',
-      date: '2025-10-12',
-      priority: 'Medium',
-      location: 'Base Camp',
-      dependencies: ['Headcount confirmation', 'Dietary restrictions'],
-      users: ['Catering Team x3', 'Service Staff x2'],
-      resources: ['Mobile Kitchen', 'Tables', 'Food Supplies', 'Beverages'],
-      status: 'Scheduled'
-    }
-  ]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'High': return '#FF4444';
-      case 'Medium': return '#FF9800';
-      case 'Low': return '#4CAF50';
-      default: return '#7A7A7A';
+  // Filter states
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
+
+  const queueOptions = [
+    'backlogged',
+    'pre-production', 
+    'ready',
+    'ongoing',
+    'in review',
+    'completed'
+  ];
+
+  const taskTypes = [
+    'equipment',
+    'location',
+    'talent',
+    'crew',
+    'post-production',
+    'logistics',
+    'permits',
+    'other'
+  ];
+
+  const priorityLevels = ['Low', 'Medium', 'High'];
+
+  // Load tasks on component mount
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  const loadTasks = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const params: Record<string, string> = {};
+      
+      if (statusFilter !== 'all') params.status = statusFilter;
+      if (typeFilter !== 'all') params.type = typeFilter;
+      if (priorityFilter !== 'all') params.priority = priorityFilter;
+
+      const response = await taskService.getTasks(params);
+      if (response.success) {
+        setTasks(response.data);
+      } else {
+        setError('Failed to load tasks');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load tasks');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reload tasks when filters change
+  useEffect(() => {
+    loadTasks();
+  }, [statusFilter, typeFilter, priorityFilter]);
+
+  const handleCreateTask = async (taskData: CreateTaskRequest) => {
+    try {
+      setError(null);
+      const response = await taskService.createTask(taskData);
+      if (response.success) {
+        await loadTasks(); // Reload tasks
+        setShowCreateModal(false);
+      } else {
+        setError(response.message || 'Failed to create task');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create task');
+    }
+  };
+
+  const handleUpdateTask = async (taskData: Partial<CreateTaskRequest>) => {
+    if (!selectedTask) return;
+    
+    try {
+      setError(null);
+      const response = await taskService.updateTask(selectedTask._id, taskData);
+      if (response.success) {
+        await loadTasks(); // Reload tasks
+        setShowEditModal(false);
+        setSelectedTask(null);
+      } else {
+        setError(response.message || 'Failed to update task');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update task');
+    }
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    if (!window.confirm('Are you sure you want to delete this task?')) return;
+    
+    try {
+      setError(null);
+      const response = await taskService.deleteTask(taskId);
+      if (response.success) {
+        await loadTasks(); // Reload tasks
+      } else {
+        setError(response.message || 'Failed to delete task');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete task');
+    }
+  };
+
+  const handleStatusChange = async (taskId: string, newStatus: string) => {
+    try {
+      setError(null);
+      const response = await taskService.updateTask(taskId, { status: newStatus as any });
+      if (response.success) {
+        await loadTasks(); // Reload tasks
+      } else {
+        setError(response.message || 'Failed to update task status');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update task status');
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Completed': return '#4CAF50';
-      case 'In Progress': return '#FF9800';
-      case 'Scheduled': return '#2196F3';
-      case 'Planning': return '#7A7A7A';
-      default: return '#7A7A7A';
+      case 'backlogged': return 'bg-gray-100 text-gray-800';
+      case 'pre-production': return 'bg-blue-100 text-blue-800';
+      case 'ready': return 'bg-green-100 text-green-800';
+      case 'ongoing': return 'bg-yellow-100 text-yellow-800';
+      case 'in review': return 'bg-purple-100 text-purple-800';
+      case 'completed': return 'bg-emerald-100 text-emerald-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const sortedTasks = [...tasks].sort((a, b) => new Date(a.date + ' ' + a.time).getTime() - new Date(b.date + ' ' + b.time).getTime());
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'High': return 'bg-red-100 text-red-800';
+      case 'Medium': return 'bg-yellow-100 text-yellow-800';
+      case 'Low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'equipment': return 'bg-blue-100 text-blue-800';
+      case 'location': return 'bg-green-100 text-green-800';
+      case 'talent': return 'bg-purple-100 text-purple-800';
+      case 'crew': return 'bg-indigo-100 text-indigo-800';
+      case 'post-production': return 'bg-orange-100 text-orange-800';
+      case 'logistics': return 'bg-yellow-100 text-yellow-800';
+      case 'permits': return 'bg-red-100 text-red-800';
+      case 'other': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   return (
-    <div className="h-full p-6" style={{ backgroundColor: '#FFFFFF' }}>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold" style={{ color: '#1F1F1F' }}>
-          Tasks Schedule
-        </h1>
-        <button 
-          className="px-4 py-2 font-bold rounded-md hover:opacity-80 transition-opacity"
-          style={{ backgroundColor: '#FCCA00', color: '#1F1F1F' }}
+    <div className="p-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Tasks Management</h1>
+          <p className="text-gray-600">Manage and track production tasks</p>
+        </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
         >
-          + Add Task
+          Create Task
         </button>
       </div>
 
-      {/* Tasks List */}
-      <div className="space-y-4 max-h-[calc(100vh-180px)] overflow-y-auto">
-        {sortedTasks.map((task) => (
-          <div
-            key={task.id}
-            className="p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-            style={{ 
-              background: 'linear-gradient(135deg, #F5F5DC 0%, #FDF5E6 100%)',
-              border: '1px solid #7A7A7A'
-            }}
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-600">{error}</p>
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full border rounded-lg px-3 py-2"
+            >
+              <option value="all">All Statuses</option>
+              {queueOptions.map(status => (
+                <option key={status} value={status}>
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="w-full border rounded-lg px-3 py-2"
+            >
+              <option value="all">All Types</option>
+              {taskTypes.map(type => (
+                <option key={type} value={type}>
+                  {type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' ')}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="w-full border rounded-lg px-3 py-2"
+            >
+              <option value="all">All Priorities</option>
+              {priorityLevels.map(priority => (
+                <option key={priority} value={priority}>
+                  {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Tasks Grid */}
+      {loading ? (
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="text-gray-600 mt-2">Loading tasks...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {tasks.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <p className="text-gray-500 text-lg">No tasks found</p>
+              <p className="text-gray-400">Create your first task to get started</p>
+            </div>
+          ) : (
+            tasks.map((task) => (
+              <div key={task._id} className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 mb-1">{task.title}</h3>
+                    <p className="text-gray-600 text-sm line-clamp-2">{task.description}</p>
+                  </div>
+                  <div className="flex gap-2 ml-4">
+                    <button
+                      onClick={() => {
+                        setSelectedTask(task);
+                        setShowEditModal(true);
+                      }}
+                      className="text-indigo-600 hover:text-indigo-800 text-sm"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteTask(task._id)}
+                      className="text-red-600 hover:text-red-800 text-sm"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                      {task.status.charAt(0).toUpperCase() + task.status.slice(1)}
+                    </span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(task.type)}`}>
+                      {task.type.charAt(0).toUpperCase() + task.type.slice(1).replace('-', ' ')}
+                    </span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                      {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                    </span>
+                  </div>
+                  {task.dueDate && (
+                    <p className="text-sm text-gray-600">
+                      Due: {new Date(task.dueDate).toLocaleDateString()}
+                    </p>
+                  )}
+                  {task.assignedTo && (
+                    <p className="text-sm text-gray-600">
+                      Assigned: {task.assignedTo.username}
+                    </p>
+                  )}
+                </div>
+
+                <div className="border-t pt-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <select
+                    value={task.status}
+                    onChange={(e) => handleStatusChange(task._id, e.target.value)}
+                    className="w-full border rounded px-2 py-1 text-sm"
+                  >
+                    {queueOptions.map(status => (
+                      <option key={status} value={status}>
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Create Task Modal */}
+      {showCreateModal && (
+        <TaskModal
+          title="Create New Task"
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={handleCreateTask}
+          queueOptions={queueOptions}
+          taskTypes={taskTypes}
+          priorityLevels={priorityLevels}
+        />
+      )}
+
+      {/* Edit Task Modal */}
+      {showEditModal && selectedTask && (
+        <TaskModal
+          title="Edit Task"
+          task={selectedTask}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedTask(null);
+          }}
+          onSubmit={handleUpdateTask}
+          queueOptions={queueOptions}
+          taskTypes={taskTypes}
+          priorityLevels={priorityLevels}
+        />
+      )}
+    </div>
+  );
+};
+
+// Task Modal Component
+interface TaskModalProps {
+  title: string;
+  task?: Task;
+  onClose: () => void;
+  onSubmit: (taskData: CreateTaskRequest) => void;
+  queueOptions: string[];
+  taskTypes: string[];
+  priorityLevels: string[];
+}
+
+const TaskModal: React.FC<TaskModalProps> = ({ 
+  title, 
+  task, 
+  onClose, 
+  onSubmit, 
+  queueOptions, 
+  taskTypes, 
+  priorityLevels 
+}) => {
+  const [formData, setFormData] = useState({
+    title: task?.title || '',
+    description: task?.description || '',
+    type: task?.type || 'production',
+    status: task?.status || 'backlogged',
+    priority: task?.priority || 'medium',
+    dueDate: task?.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+    assignedTo: task?.assignedTo?.username || '',
+    dependencies: task?.dependencies?.join(', ') || '',
+    resources: task?.resources?.join(', ') || '',
+    estimatedHours: task?.estimatedDuration?.toString() || '',
+    notes: Array.isArray(task?.notes) ? '' : (task?.notes || '')
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const taskData: CreateTaskRequest = {
+      title: formData.title,
+      description: formData.description,
+      type: formData.type as any,
+      status: formData.status as any,
+      priority: formData.priority as any,
+      ...(formData.dueDate && { dueDate: formData.dueDate }),
+      assignedTo: formData.assignedTo || undefined,
+      dependencies: formData.dependencies ? formData.dependencies.split(',').map((s: string) => s.trim()) : [],
+      resources: formData.resources ? formData.resources.split(',').map((s: string) => s.trim()) : [],
+      ...(formData.estimatedHours && { estimatedDuration: parseInt(formData.estimatedHours) })
+    };
+    
+    onSubmit(taskData);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
           >
-            <div className="flex items-start justify-between">
-              {/* Main Content */}
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-lg font-bold" style={{ color: '#1F1F1F' }}>
-                    {task.title}
-                  </h3>
-                  <span 
-                    className="text-xs font-semibold px-2 py-1 rounded"
-                    style={{ backgroundColor: getPriorityColor(task.priority), color: '#FFFFFF' }}
-                  >
-                    {task.priority}
-                  </span>
-                  <span 
-                    className="text-xs font-semibold px-2 py-1 rounded"
-                    style={{ backgroundColor: getStatusColor(task.status), color: '#FFFFFF' }}
-                  >
-                    {task.status}
-                  </span>
-                </div>
+            ✕
+          </button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Title *
+              </label>
+              <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                className="w-full border rounded-lg px-3 py-2"
+                required
+              />
+            </div>
 
-                <p className="text-sm mb-3" style={{ color: '#1F1F1F', opacity: 0.8 }}>
-                  {task.description}
-                </p>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                className="w-full border rounded-lg px-3 py-2"
+                rows={3}
+              />
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <span className="font-semibold" style={{ color: '#1F1F1F' }}>Date & Time:</span>
-                    <div style={{ color: '#1F1F1F', opacity: 0.7 }}>{task.date} at {task.time}</div>
-                  </div>
-                  
-                  {task.location && (
-                    <div>
-                      <span className="font-semibold" style={{ color: '#1F1F1F' }}>Location:</span>
-                      <div style={{ color: '#1F1F1F', opacity: 0.7 }}>{task.location}</div>
-                    </div>
-                  )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Type *
+              </label>
+              <select
+                value={formData.type}
+                onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
+                className="w-full border rounded-lg px-3 py-2"
+                required
+              >
+                {taskTypes.map(type => (
+                  <option key={type} value={type}>
+                    {type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' ')}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-                  {task.users && task.users.length > 0 && (
-                    <div>
-                      <span className="font-semibold" style={{ color: '#1F1F1F' }}>Assigned To:</span>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {task.users.slice(0, 2).map((user, index) => (
-                          <span 
-                            key={index}
-                            className="text-xs px-2 py-1 rounded"
-                            style={{ backgroundColor: '#F5F5DC', color: '#1F1F1F' }}
-                          >
-                            {user}
-                          </span>
-                        ))}
-                        {task.users.length > 2 && (
-                          <span 
-                            className="text-xs px-2 py-1 rounded"
-                            style={{ backgroundColor: '#7A7A7A', color: '#FFFFFF' }}
-                          >
-                            +{task.users.length - 2} more
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status *
+              </label>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
+                className="w-full border rounded-lg px-3 py-2"
+                required
+              >
+                {queueOptions.map(status => (
+                  <option key={status} value={status}>
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-                  {task.resources && task.resources.length > 0 && (
-                    <div>
-                      <span className="font-semibold" style={{ color: '#1F1F1F' }}>Resources:</span>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {task.resources.slice(0, 2).map((resource, index) => (
-                          <span 
-                            key={index}
-                            className="text-xs px-2 py-1 rounded"
-                            style={{ backgroundColor: '#D0D0D0', color: '#1F1F1F' }}
-                          >
-                            {resource}
-                          </span>
-                        ))}
-                        {task.resources.length > 2 && (
-                          <span 
-                            className="text-xs px-2 py-1 rounded"
-                            style={{ backgroundColor: '#7A7A7A', color: '#FFFFFF' }}
-                          >
-                            +{task.resources.length - 2} more
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Priority *
+              </label>
+              <select
+                value={formData.priority}
+                onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
+                className="w-full border rounded-lg px-3 py-2"
+                required
+              >
+                {priorityLevels.map(priority => (
+                  <option key={priority} value={priority}>
+                    {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-                {task.dependencies && task.dependencies.length > 0 && (
-                  <div className="mt-3">
-                    <span className="font-semibold text-sm" style={{ color: '#1F1F1F' }}>Dependencies:</span>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {task.dependencies.map((dep, index) => (
-                        <span 
-                          key={index}
-                          className="text-xs px-2 py-1 rounded border"
-                          style={{ 
-                            backgroundColor: '#FFFFFF', 
-                            color: '#1F1F1F',
-                            borderColor: '#1F1F1F'
-                          }}
-                        >
-                          {dep}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Due Date
+              </label>
+              <input
+                type="date"
+                value={formData.dueDate}
+                onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
+                className="w-full border rounded-lg px-3 py-2"
+              />
+            </div>
 
-              {/* Actions */}
-              <div className="flex gap-2 ml-4">
-                <button 
-                  className="px-3 py-1 text-xs font-bold rounded hover:opacity-80"
-                  style={{ backgroundColor: '#1F1F1F', color: '#FCCA00' }}
-                >
-                  Edit
-                </button>
-                <button 
-                  className="px-3 py-1 text-xs font-bold rounded hover:opacity-80"
-                  style={{ backgroundColor: '#FFFFFF', color: '#1F1F1F' }}
-                >
-                  Details
-                </button>
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Estimated Hours
+              </label>
+              <input
+                type="number"
+                value={formData.estimatedHours}
+                onChange={(e) => setFormData(prev => ({ ...prev, estimatedHours: e.target.value }))}
+                className="w-full border rounded-lg px-3 py-2"
+                min="0"
+                step="0.5"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Assigned To (username)
+              </label>
+              <input
+                type="text"
+                value={formData.assignedTo}
+                onChange={(e) => setFormData(prev => ({ ...prev, assignedTo: e.target.value }))}
+                className="w-full border rounded-lg px-3 py-2"
+                placeholder="john_doe"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-7 mb-1">
+                Dependencies (comma-separated)
+              </label>
+              <input
+                type="text"
+                value={formData.dependencies}
+                onChange={(e) => setFormData(prev => ({ ...prev, dependencies: e.target.value }))}
+                className="w-full border rounded-lg px-3 py-2"
+                placeholder="Equipment setup, Script approval"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Resources (comma-separated)
+              </label>
+              <input
+                type="text"
+                value={formData.resources}
+                onChange={(e) => setFormData(prev => ({ ...prev, resources: e.target.value }))}
+                className="w-full border rounded-lg px-3 py-2"
+                placeholder="Camera, Lighting kit"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Notes
+              </label>
+              <textarea
+                value={formData.notes}
+                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                className="w-full border rounded-lg px-3 py-2"
+                rows={3}
+              />
             </div>
           </div>
-        ))}
+
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+            >
+              {task ? 'Update Task' : 'Create Task'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

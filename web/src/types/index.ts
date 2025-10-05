@@ -268,3 +268,213 @@ export interface InviteUserRequest {
   roles: ProjectRole[];
   message?: string;
 }
+
+// Scene and Task types
+export interface Scene {
+  _id: string;
+  id?: string; // Alias for _id for compatibility
+  title: string;
+  description: string;
+  time?: string; // Format: "HH:MM"
+  date?: string; // Format: "YYYY-MM-DD"
+  priority: 'High' | 'Medium' | 'Low';
+  status: 'backlogged' | 'pre-production' | 'ready' | 'ongoing' | 'in review' | 'completed';
+  location?: string;
+  locationId?: string;
+  dependencies?: string[];
+  estimatedDuration?: number; // Minutes
+  actualDuration?: number; // Minutes
+  equipment?: string[];
+  cast?: Array<{
+    name: string;
+    role: string;
+    contact?: string;
+  }>;
+  crew?: Array<{
+    userId?: string;
+    name: string;
+    role: string;
+  }>;
+  notes?: Array<{
+    author: {
+      _id: string;
+      username: string;
+      role: string;
+    };
+    text: string;
+    role: string;
+    createdAt: string;
+  }>;
+  tags?: string[];
+  createdBy: {
+    _id: string;
+    username: string;
+    role: string;
+  };
+  assignedTo?: {
+    _id: string;
+    username: string;
+    role: string;
+  };
+  completedAt?: string;
+  shotType?: 'wide' | 'medium' | 'close-up' | 'extreme close-up' | 'establishing' | 'insert' | 'other';
+  cameraAngles?: ('front' | 'back' | 'side' | 'overhead' | 'low' | 'high' | 'dutch' | 'other')[];
+  lighting?: 'natural' | 'artificial' | 'mixed' | 'golden hour' | 'blue hour' | 'night';
+  weather?: 'sunny' | 'cloudy' | 'rainy' | 'windy' | 'snow' | 'any';
+  projectId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Task {
+  _id: string;
+  id?: string; // Alias for _id for compatibility
+  title: string;
+  description: string;
+  time?: string; // Format: "HH:MM"
+  date?: string; // Format: "YYYY-MM-DD"
+  priority: 'High' | 'Medium' | 'Low';
+  status: 'backlogged' | 'pre-production' | 'ready' | 'ongoing' | 'in review' | 'completed';
+  type: 'equipment' | 'location' | 'talent' | 'crew' | 'post-production' | 'logistics' | 'permits' | 'other';
+  location?: string;
+  locationId?: string;
+  sceneId?: string;
+  dependencies?: string[];
+  users?: Array<{
+    userId?: string;
+    name: string;
+    role: string;
+  }>;
+  resources?: string[];
+  estimatedDuration?: number; // Minutes
+  actualDuration?: number; // Minutes
+  estimatedCost?: number;
+  actualCost?: number;
+  budget?: number;
+  notes?: Array<{
+    author: {
+      _id: string;
+      username: string;
+      role: string;
+    };
+    text: string;
+    role: string;
+    createdAt: string;
+  }>;
+  checklist?: Array<{
+    _id: string;
+    item: string;
+    completed: boolean;
+    completedBy?: {
+      _id: string;
+      username: string;
+      role: string;
+    };
+    completedAt?: string;
+  }>;
+  tags?: string[];
+  createdBy: {
+    _id: string;
+    username: string;
+    role: string;
+  };
+  assignedTo?: {
+    _id: string;
+    username: string;
+    role: string;
+  };
+  completedAt?: string;
+  dueDate?: string;
+  isUrgent?: boolean;
+  requiresApproval?: boolean;
+  approvedBy?: {
+    _id: string;
+    username: string;
+    role: string;
+  };
+  approvedAt?: string;
+  approvalNotes?: string;
+  projectId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSceneRequest {
+  title: string;
+  description: string;
+  time?: string;
+  date?: string;
+  priority?: 'High' | 'Medium' | 'Low';
+  status?: 'backlogged' | 'pre-production' | 'ready' | 'ongoing' | 'in review' | 'completed';
+  location?: string;
+  locationId?: string;
+  dependencies?: string[];
+  estimatedDuration?: number;
+  equipment?: string[];
+  cast?: Array<{
+    name: string;
+    role: string;
+    contact?: string;
+  }>;
+  crew?: Array<{
+    userId?: string;
+    name: string;
+    role: string;
+  }>;
+  tags?: string[];
+  assignedTo?: string;
+  shotType?: 'wide' | 'medium' | 'close-up' | 'extreme close-up' | 'establishing' | 'insert' | 'other';
+  cameraAngles?: ('front' | 'back' | 'side' | 'overhead' | 'low' | 'high' | 'dutch' | 'other')[];
+  lighting?: 'natural' | 'artificial' | 'mixed' | 'golden hour' | 'blue hour' | 'night';
+  weather?: 'sunny' | 'cloudy' | 'rainy' | 'windy' | 'snow' | 'any';
+  projectId?: string;
+}
+
+export interface CreateTaskRequest {
+  title: string;
+  description: string;
+  time?: string;
+  date?: string;
+  priority?: 'High' | 'Medium' | 'Low';
+  status?: 'backlogged' | 'pre-production' | 'ready' | 'ongoing' | 'in review' | 'completed';
+  type?: 'equipment' | 'location' | 'talent' | 'crew' | 'post-production' | 'logistics' | 'permits' | 'other';
+  location?: string;
+  locationId?: string;
+  sceneId?: string;
+  dependencies?: string[];
+  users?: Array<{
+    userId?: string;
+    name: string;
+    role: string;
+  }>;
+  resources?: string[];
+  estimatedDuration?: number;
+  estimatedCost?: number;
+  budget?: number;
+  checklist?: Array<{
+    item: string;
+    completed?: boolean;
+  }>;
+  tags?: string[];
+  assignedTo?: string;
+  dueDate?: string;
+  isUrgent?: boolean;
+  requiresApproval?: boolean;
+  projectId?: string;
+}
+
+export interface AddNoteRequest {
+  text: string;
+  role: string;
+}
+
+export interface BoardData {
+  [status: string]: {
+    scenes: Scene[];
+    tasks: Task[];
+  };
+}
+
+export interface BoardItem extends Scene, Task {
+  itemType: 'scene' | 'task';
+}
