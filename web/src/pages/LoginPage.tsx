@@ -1,39 +1,40 @@
-import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const LoginPage: React.FC = () => {
   const { login, register } = useAuth();
   const navigate = useNavigate();
   const [isRegistering, setIsRegistering] = useState(false);
   const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    role: 'scout' as 'producer' | 'director' | 'manager' | 'scout' | 'crew',
+    username: "",
+    password: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       if (isRegistering) {
-        await register(formData.username, formData.password, formData.role);
+        await register(formData.username, formData.password);
       } else {
-        await login(formData.username, formData.password, formData.role);
+        await login(formData.username, formData.password);
       }
-      navigate('/scout');
+      navigate("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -45,7 +46,7 @@ const LoginPage: React.FC = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            {isRegistering ? 'Create your account' : 'Sign in to your account'}
+            {isRegistering ? "Create your account" : "Sign in to your account"}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Location Scouting Platform
@@ -77,29 +78,11 @@ const LoginPage: React.FC = () => {
                 name="password"
                 type="password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleInputChange}
               />
-            </div>
-            <div>
-              <label htmlFor="role" className="sr-only">
-                Role
-              </label>
-              <select
-                id="role"
-                name="role"
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                value={formData.role}
-                onChange={handleInputChange}
-              >
-                <option value="scout">Scout</option>
-                <option value="manager">Manager</option>
-                <option value="producer">Producer</option>
-                <option value="director">Director</option>
-                <option value="crew">Crew</option>
-              </select>
             </div>
           </div>
 
@@ -113,7 +96,11 @@ const LoginPage: React.FC = () => {
               disabled={loading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
-              {loading ? 'Processing...' : isRegistering ? 'Register' : 'Sign in'}
+              {loading
+                ? "Processing..."
+                : isRegistering
+                ? "Register"
+                : "Sign in"}
             </button>
           </div>
 
@@ -123,11 +110,11 @@ const LoginPage: React.FC = () => {
               className="text-indigo-600 hover:text-indigo-500 text-sm"
               onClick={() => {
                 setIsRegistering(!isRegistering);
-                setError('');
+                setError("");
               }}
             >
               {isRegistering
-                ? 'Already have an account? Sign in'
+                ? "Already have an account? Sign in"
                 : "Don't have an account? Register"}
             </button>
           </div>

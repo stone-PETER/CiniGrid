@@ -1,15 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useLocations } from '../hooks/useLocations';
-import SearchBox from '../components/SearchBox';
-import SuggestionsList from '../components/SuggestionsList';
-import PotentialLocationsList from '../components/PotentialLocationsList';
-import PotentialDetailPanel from '../components/PotentialDetailPanel';
-import DirectAddForm from '../components/DirectAddForm';
-import Toast from '../components/Toast';
+import React, { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useProject } from "../context/ProjectContext";
+import { useLocations } from "../hooks/useLocations";
+import SearchBox from "../components/SearchBox";
+import SuggestionsList from "../components/SuggestionsList";
+import PotentialLocationsList from "../components/PotentialLocationsList";
+import PotentialDetailPanel from "../components/PotentialDetailPanel";
+import DirectAddForm from "../components/DirectAddForm";
+import Toast from "../components/Toast";
 
 const ScoutDashboard: React.FC = () => {
   const { user, logout } = useAuth();
+  const { currentProject } = useProject();
   const {
     suggestions,
     potentialLocations,
@@ -33,47 +35,64 @@ const ScoutDashboard: React.FC = () => {
   } = useLocations();
 
   const [showDirectAddForm, setShowDirectAddForm] = useState(false);
-  const [toast, setToast] = useState<{message: string; type: 'success' | 'error' | 'info'; visible: boolean}>({
-    message: '',
-    type: 'info',
-    visible: false
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error" | "info";
+    visible: boolean;
+  }>({
+    message: "",
+    type: "info",
+    visible: false,
   });
 
   useEffect(() => {
-    // Load potential locations on component mount
-    console.log('Loading potential locations...');
-    getPotentialList().then(() => {
-      console.log('Potential locations loaded:', potentialLocations);
-    }).catch(err => {
-      console.error('Failed to load potential locations:', err);
-    });
-  }, [getPotentialList]);
+    // Load potential locations on component mount with current project filter
+    console.log(
+      "Loading potential locations for project:",
+      currentProject?._id
+    );
+    getPotentialList(currentProject?._id)
+      .then(() => {
+        console.log("Potential locations loaded");
+      })
+      .catch((err) => {
+        console.error("Failed to load potential locations:", err);
+      });
+  }, [getPotentialList, currentProject?._id]);
 
-  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+  const showToast = (message: string, type: "success" | "error" | "info") => {
     setToast({ message, type, visible: true });
   };
 
   const handleSearch = async (prompt: string) => {
-    await searchAi({ prompt });
+    // Include projectId for project-scoped AI searches
+    await searchAi({
+      prompt,
+      projectId: currentProject?._id,
+    });
   };
 
-  const handleAddToPotential = async (suggestion: any, suggestionIndex: number) => {
+  const handleAddToPotential = async (
+    suggestion: any,
+    suggestionIndex: number
+  ) => {
     try {
-      await addPotentialFromSuggestion(suggestion);
+      // Pass projectId when adding location
+      await addPotentialFromSuggestion(suggestion, currentProject?._id);
     } catch (err) {
-      console.error('Failed to add to potential:', err);
+      console.error("Failed to add to potential:", err);
     }
   };
 
   const handleSelectLocation = async (location: any) => {
-    console.log('Selecting location:', location);
+    console.log("Selecting location:", location);
     try {
-      console.log('Calling getPotentialDetail with ID:', location._id);
+      console.log("Calling getPotentialDetail with ID:", location._id);
       const result = await getPotentialDetail(location._id);
-      console.log('Got location details:', result);
+      console.log("Got location details:", result);
     } catch (err) {
-      console.error('Failed to get location details:', err);
-      showToast('Failed to load location details', 'error');
+      console.error("Failed to get location details:", err);
+      showToast("Failed to load location details", "error");
     }
   };
 
@@ -82,17 +101,24 @@ const ScoutDashboard: React.FC = () => {
       try {
         await addNote({ text: content, locationId: selectedLocation._id });
       } catch (err) {
-        console.error('Failed to add note:', err);
+        console.error("Failed to add note:", err);
       }
     }
   };
 
-  const handleAddApproval = async (status: 'approved' | 'rejected', notes?: string) => {
+  const handleAddApproval = async (
+    status: "approved" | "rejected",
+    notes?: string
+  ) => {
     if (selectedLocation) {
       try {
-        await addApproval({ approved: status === 'approved', comment: notes, locationId: selectedLocation._id });
+        await addApproval({
+          approved: status === "approved",
+          comment: notes,
+          locationId: selectedLocation._id,
+        });
       } catch (err) {
-        console.error('Failed to add approval:', err);
+        console.error("Failed to add approval:", err);
       }
     }
   };
@@ -102,12 +128,15 @@ const ScoutDashboard: React.FC = () => {
       try {
         await finalizeLocation(selectedLocation._id);
         setSelectedLocation(null); // Clear selection since it moved to finalized
-        showToast(`Location "${selectedLocation.title}" has been finalized successfully!`, 'success');
+        showToast(
+          `Location "${selectedLocation.title}" has been finalized successfully!`,
+          "success"
+        );
         // Refresh the potential locations list to remove the finalized one
         getPotentialList();
       } catch (err) {
-        console.error('Failed to finalize location:', err);
-        showToast('Failed to finalize location. Please try again.', 'error');
+        console.error("Failed to finalize location:", err);
+        showToast("Failed to finalize location. Please try again.", "error");
       }
     }
   };
@@ -122,27 +151,27 @@ const ScoutDashboard: React.FC = () => {
       permits?: string[];
       images?: string[];
     };
-    status: 'potential' | 'finalized';
+    status: "potential" | "finalized";
   }) => {
     try {
       const directAddData = {
         title: data.manualData.title,
         description: data.manualData.description,
         coordinates: data.manualData.coordinates,
-        region: data.manualData.region || '',
+        region: data.manualData.region || "",
         tags: data.manualData.tags,
         permits: data.manualData.permits,
-        images: data.manualData.images
+        images: data.manualData.images,
       };
-      
-      if (data.status === 'potential') {
+
+      if (data.status === "potential") {
         await directAddToPotential(directAddData);
       } else {
         await directAddToFinalized(directAddData);
       }
       setShowDirectAddForm(false);
     } catch (err) {
-      console.error('Failed to add location directly:', err);
+      console.error("Failed to add location directly:", err);
     }
   };
 
@@ -153,7 +182,9 @@ const ScoutDashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Location Scouting Dashboard</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Location Scouting Dashboard
+              </h1>
               <p className="mt-1 text-sm text-gray-600">
                 Welcome back, {user?.username} ({user?.role})
               </p>
@@ -162,21 +193,21 @@ const ScoutDashboard: React.FC = () => {
               <a
                 href="/finalized"
                 className="px-4 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 font-medium transition-opacity"
-                style={{ backgroundColor: '#FCCA00', color: '#1F1F1F' }}
+                style={{ backgroundColor: "#FCCA00", color: "#1F1F1F" }}
               >
                 View Finalized
               </a>
               <button
                 onClick={() => setShowDirectAddForm(true)}
                 className="px-4 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 font-medium transition-opacity"
-                style={{ backgroundColor: '#1F1F1F', color: '#FCCA00' }}
+                style={{ backgroundColor: "#1F1F1F", color: "#FCCA00" }}
               >
                 Add Location
               </button>
               <button
                 onClick={logout}
                 className="px-4 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 font-medium transition-opacity"
-                style={{ backgroundColor: '#1F1F1F', color: '#FCCA00' }}
+                style={{ backgroundColor: "#1F1F1F", color: "#FCCA00" }}
               >
                 Logout
               </button>
@@ -190,8 +221,16 @@ const ScoutDashboard: React.FC = () => {
         <div className="bg-red-50 border border-red-200 rounded-md p-4 mx-4 mt-4">
           <div className="flex">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              <svg
+                className="h-5 w-5 text-red-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
               </svg>
             </div>
             <div className="ml-3">
@@ -202,8 +241,16 @@ const ScoutDashboard: React.FC = () => {
                 onClick={() => setError(null)}
                 className="text-red-400 hover:text-red-600"
               >
-                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                <svg
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </button>
             </div>
@@ -221,7 +268,7 @@ const ScoutDashboard: React.FC = () => {
 
           {/* Middle Column - Suggestions */}
           <div className="lg:col-span-4">
-            <SuggestionsList 
+            <SuggestionsList
               suggestions={suggestions}
               onAddToPotential={handleAddToPotential}
               loading={loading}
@@ -230,7 +277,7 @@ const ScoutDashboard: React.FC = () => {
 
           {/* Right Column - Potential Locations */}
           <div className="lg:col-span-5">
-            <PotentialLocationsList 
+            <PotentialLocationsList
               locations={potentialLocations}
               selectedLocation={selectedLocation}
               onSelectLocation={handleSelectLocation}
@@ -241,23 +288,30 @@ const ScoutDashboard: React.FC = () => {
 
         {/* Detail Panel - Full Width */}
         {(() => {
-          console.log('📍 Detail Panel Check - selectedLocation:', selectedLocation);
-          console.log('📍 Detail Panel Check - has coordinates:', selectedLocation?.coordinates);
+          console.log(
+            "📍 Detail Panel Check - selectedLocation:",
+            selectedLocation
+          );
+          console.log(
+            "📍 Detail Panel Check - has coordinates:",
+            selectedLocation?.coordinates
+          );
           return selectedLocation && selectedLocation.coordinates;
-        })() && selectedLocation && (
-          <div className="mt-8">
-            <PotentialDetailPanel
-              location={selectedLocation}
-              notes={locationNotes}
-              approvals={locationApprovals}
-              currentUser={user}
-              onAddNote={handleAddNote}
-              onAddApproval={handleAddApproval}
-              onFinalize={handleFinalizeLocation}
-              loading={loading}
-            />
-          </div>
-        )}
+        })() &&
+          selectedLocation && (
+            <div className="mt-8">
+              <PotentialDetailPanel
+                location={selectedLocation}
+                notes={locationNotes}
+                approvals={locationApprovals}
+                currentUser={user}
+                onAddNote={handleAddNote}
+                onAddApproval={handleAddApproval}
+                onFinalize={handleFinalizeLocation}
+                loading={loading}
+              />
+            </div>
+          )}
       </main>
 
       {/* Direct Add Form Modal */}
@@ -273,7 +327,7 @@ const ScoutDashboard: React.FC = () => {
         message={toast.message}
         type={toast.type}
         isVisible={toast.visible}
-        onClose={() => setToast(prev => ({ ...prev, visible: false }))}
+        onClose={() => setToast((prev) => ({ ...prev, visible: false }))}
       />
     </div>
   );

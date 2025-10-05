@@ -11,6 +11,8 @@ import testRoutes from "./routes/test.js";
 import aiAgentRoutes from "./routes/aiAgentRoutes.js";
 import testGeminiOnlyRoutes from "./routes/testGeminiOnly.js";
 import photosRoutes from "./routes/photos.js";
+import projectRoutes from "./routes/projects.js";
+import invitationRoutes from "./routes/invitations.js";
 
 dotenv.config();
 
@@ -34,7 +36,9 @@ app.get("/", (req, res) => {
     message: "Location Scouting API is running 🚀",
     version: "1.0.0",
     endpoints: {
-      auth: "/api/auth",
+      auth: "/api/auth (register, login)",
+      projects: "/api/projects (create, list, manage projects)",
+      invitations: "/api/invitations (project invites)",
       ai: "/api/ai",
       locations: "/api/locations",
       aiAgent: "/api/ai-agent",
@@ -46,6 +50,8 @@ app.get("/", (req, res) => {
 
 // API Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/projects", projectRoutes);
+app.use("/api/invitations", invitationRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/ai", testGeminiOnlyRoutes); // Test routes under /api/ai
 app.use("/api/locations", locationsRoutes);

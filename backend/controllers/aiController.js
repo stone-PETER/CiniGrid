@@ -9,6 +9,7 @@ export const searchLocations = async (req, res) => {
   try {
     const {
       prompt,
+      projectId, // NEW: project-scoped searches
       forceRefresh = false,
       maxResults = 5,
       useMock = false,
@@ -21,6 +22,13 @@ export const searchLocations = async (req, res) => {
       });
     }
 
+    // projectId is optional for backward compatibility, but recommended
+    if (!projectId) {
+      console.warn(
+        "⚠️ AI search without projectId - results won't be project-scoped"
+      );
+    }
+
     // Check if AI Agent is available and user doesn't explicitly want mock
     const useRealAI = isAIAgentAvailable() && !useMock;
 
@@ -30,9 +38,15 @@ export const searchLocations = async (req, res) => {
 
     if (useRealAI) {
       // Use real AI Agent with Google Places + Gemini
-      console.log("🤖 Using real AI Agent for location recommendations");
+      console.log(
+        `🤖 Using real AI Agent for location recommendations${
+          projectId ? ` (project: ${projectId})` : ""
+        }`
+      );
 
       const result = await findAndRankLocations(prompt, {
+        projectId, // Pass projectId for project-scoped caching
+        userId: req.user.id,
         forceRefresh,
         maxResults: Math.min(maxResults, 10),
       });

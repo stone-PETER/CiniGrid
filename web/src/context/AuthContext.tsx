@@ -1,12 +1,21 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
-import type { User } from '../types';
-import { authService } from '../services/locationService';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import type { ReactNode } from "react";
+import type { User } from "../types";
+import { authService } from "../services/locationService";
+
+interface AuthResponse {
+  user: {
+    _id?: string;
+    id?: string;
+    username: string;
+  };
+  token: string;
+}
 
 interface AuthContextType {
   user: User | null;
-  login: (username: string, password: string, role?: string) => Promise<void>;
-  register: (username: string, password: string, role: 'producer' | 'director' | 'manager' | 'scout' | 'crew') => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
+  register: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   loading: boolean;
@@ -24,61 +33,77 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     // Check for existing auth on app load
-    const token = localStorage.getItem('auth_token');
-    const userData = localStorage.getItem('user');
-    
-    console.log('🔐 Auth Check - Token:', token ? 'exists' : 'none');
-    console.log('🔐 Auth Check - User data:', userData ? 'exists' : 'none');
-    
+    const token = localStorage.getItem("auth_token");
+    const userData = localStorage.getItem("user");
+
+    console.log("🔐 Auth Check - Token:", token ? "exists" : "none");
+    console.log("🔐 Auth Check - User data:", userData ? "exists" : "none");
+
     if (token && userData) {
       try {
         const parsedUser = JSON.parse(userData);
         setUser({ ...parsedUser, token });
-        console.log('🔐 Auth restored for user:', parsedUser.username);
+        console.log("🔐 Auth restored for user:", parsedUser.username);
       } catch (error) {
-        console.error('Failed to parse user data:', error);
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user');
+        console.error("Failed to parse user data:", error);
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("user");
       }
     }
     setLoading(false);
   }, []);
 
-  const login = async (username: string, password: string, role?: string) => {
+  const login = async (username: string, password: string) => {
     try {
-      console.log('🔐 Attempting login for:', username);
-      const response = await authService.login({ username, password, role });
-      
+      console.log("🔐 Attempting login for:", username);
+      const response = await authService.login({ username, password });
+
       if (response.success && response.data) {
-        const userData = response.data;
-        localStorage.setItem('auth_token', userData.token || '');
-        localStorage.setItem('user', JSON.stringify(userData));
+        // Backend returns: { success: true, data: { user: {...}, token: "..." } }
+        // Need to extract user and token from response.data
+        const authData = response.data as unknown as AuthResponse;
+        const userData = {
+          ...authData.user,
+          id: authData.user.id || authData.user._id || "",
+          token: authData.token,
+        };
+
+        localStorage.setItem("auth_token", authData.token || "");
+        localStorage.setItem("user", JSON.stringify(userData));
         setUser(userData);
-        console.log('🔐 Login successful for:', userData.username, 'Role:', userData.role);
+        console.log("🔐 Login successful for:", userData.username);
       } else {
-        console.log('🔐 Login failed:', response.message);
-        throw new Error(response.message || 'Login failed');
+        console.log("🔐 Login failed:", response.message);
+        throw new Error(response.message || "Login failed");
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       throw error;
     }
   };
 
-  const register = async (username: string, password: string, role: 'producer' | 'director' | 'manager' | 'scout' | 'crew') => {
+  const register = async (username: string, password: string) => {
     try {
-      const response = await authService.register({ username, password, role });
-      
+      const response = await authService.register({ username, password });
+
       if (response.success && response.data) {
-        const userData = response.data;
-        localStorage.setItem('auth_token', userData.token || '');
-        localStorage.setItem('user', JSON.stringify(userData));
+        // Backend returns: { success: true, data: { user: {...}, token: "..." } }
+        // Need to extract user and token from response.data
+        const authData = response.data as unknown as AuthResponse;
+        const userData = {
+          ...authData.user,
+          id: authData.user.id || authData.user._id || "",
+          token: authData.token,
+        };
+
+        localStorage.setItem("auth_token", authData.token || "");
+        localStorage.setItem("user", JSON.stringify(userData));
         setUser(userData);
       } else {
-        throw new Error(response.message || 'Registration failed');
+        throw new Error(response.message || "Registration failed");
       }
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error("Registration error:", error);
       throw error;
     }
   };
@@ -87,7 +112,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await authService.logout();
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     } finally {
       setUser(null);
     }
@@ -108,7 +133,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

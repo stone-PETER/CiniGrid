@@ -6,7 +6,7 @@ import {
   clearCache,
   checkStatus,
 } from "../controllers/aiAgentController.js";
-import { protect, authorize } from "../middleware/auth.js";
+import { protect } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -24,6 +24,10 @@ router.post(
       .withMessage("Description is required")
       .isLength({ min: 10, max: 500 })
       .withMessage("Description must be between 10 and 500 characters"),
+    body("projectId")
+      .optional()
+      .isMongoId()
+      .withMessage("Invalid project ID format"),
     body("forceRefresh")
       .optional()
       .isBoolean()
@@ -36,13 +40,8 @@ router.post(
   findLocations
 );
 
-// Admin routes (directors and producers only)
-router.get("/stats", protect, authorize("director", "producer"), getStats);
-router.delete(
-  "/cache/expired",
-  protect,
-  authorize("director", "producer"),
-  clearCache
-);
+// Admin routes - project-scoped
+router.get("/stats", protect, getStats);
+router.delete("/cache/expired", protect, clearCache);
 
 export default router;

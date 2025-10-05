@@ -1,12 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useLocations } from '../hooks/useLocations';
-import type { Location } from '../types';
+import React, { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useLocations } from "../hooks/useLocations";
+import type { Location } from "../types";
 
 const FinalizedLocations: React.FC = () => {
   const { logout } = useAuth();
-  const { finalizedLocations, locationNotes, loading, error, getFinalizedList, getPotentialDetail } = useLocations();
-  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const {
+    finalizedLocations,
+    locationNotes,
+    loading,
+    error,
+    getFinalizedList,
+    getPotentialDetail,
+  } = useLocations();
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(
+    null
+  );
 
   useEffect(() => {
     getFinalizedList();
@@ -20,7 +29,7 @@ const FinalizedLocations: React.FC = () => {
 
   const openMapInNewTab = (lat: number, lng: number) => {
     const url = `https://www.google.com/maps?q=${lat},${lng}&ll=${lat},${lng}&z=16&t=m&markers=size:mid%7Ccolor:red%7C${lat},${lng}`;
-    window.open(url, '_blank');
+    window.open(url, "_blank");
   };
 
   return (
@@ -30,7 +39,9 @@ const FinalizedLocations: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Finalized Locations</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Finalized Locations
+              </h1>
               <p className="mt-1 text-sm text-gray-600">
                 Approved locations ready for use
               </p>
@@ -39,14 +50,14 @@ const FinalizedLocations: React.FC = () => {
               <a
                 href="/scout"
                 className="px-4 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 font-medium transition-opacity"
-                style={{ backgroundColor: '#FCCA00', color: '#1F1F1F' }}
+                style={{ backgroundColor: "#FCCA00", color: "#1F1F1F" }}
               >
                 Back to Dashboard
               </a>
               <button
                 onClick={logout}
                 className="px-4 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 font-medium transition-opacity"
-                style={{ backgroundColor: '#1F1F1F', color: '#FCCA00' }}
+                style={{ backgroundColor: "#1F1F1F", color: "#FCCA00" }}
               >
                 Logout
               </button>
@@ -60,8 +71,16 @@ const FinalizedLocations: React.FC = () => {
         <div className="bg-red-50 border border-red-200 rounded-md p-4 mx-4 mt-4">
           <div className="flex">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              <svg
+                className="h-5 w-5 text-red-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
               </svg>
             </div>
             <div className="ml-3">
@@ -88,22 +107,38 @@ const FinalizedLocations: React.FC = () => {
           </div>
         ) : finalizedLocations.length === 0 ? (
           <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+            <svg
+              className="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+              />
             </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No finalized locations</h3>
-            <p className="mt-1 text-sm text-gray-500">Get started by finalizing some potential locations.</p>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">
+              No finalized locations
+            </h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Get started by finalizing some potential locations.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {finalizedLocations.map((location) => {
               // Helper functions to handle different data structures
               const getTitle = (loc: Location): string => {
-                return loc.title || loc.name || 'Untitled Location';
+                return loc.title || loc.name || "Untitled Location";
               };
 
               const getDescription = (loc: Location): string => {
-                return loc.description || loc.reason || 'No description available';
+                return (
+                  loc.description || loc.reason || "No description available"
+                );
               };
 
               const getPrimaryImage = (loc: Location): string | null => {
@@ -121,8 +156,8 @@ const FinalizedLocations: React.FC = () => {
               const primaryImage = getPrimaryImage(location);
 
               return (
-                <div 
-                  key={location._id} 
+                <div
+                  key={location._id}
                   className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer"
                   onClick={() => handleSelectLocation(location)}
                 >
@@ -149,15 +184,25 @@ const FinalizedLocations: React.FC = () => {
 
                     {/* Image */}
                     {primaryImage ? (
-                      <img 
-                        src={primaryImage} 
+                      <img
+                        src={primaryImage}
                         alt={title}
                         className="w-full h-48 object-cover rounded-lg mb-4"
                       />
                     ) : (
                       <div className="w-full h-48 bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
-                        <svg className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <svg
+                          className="w-12 h-12 text-gray-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
                         </svg>
                       </div>
                     )}
@@ -185,16 +230,20 @@ const FinalizedLocations: React.FC = () => {
                     </div>
 
                     {/* Title and Description */}
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-                    
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      {title}
+                    </h3>
+
                     {/* Address (if available) */}
                     {location.address && (
                       <p className="text-xs text-gray-500 mb-2">
                         📍 {location.address}
                       </p>
                     )}
-                    
-                    <p className="text-gray-600 text-sm line-clamp-3 mb-4">{description}</p>
+
+                    <p className="text-gray-600 text-sm line-clamp-3 mb-4">
+                      {description}
+                    </p>
 
                     {/* Tags */}
                     {location.tags && location.tags.length > 0 && (
@@ -222,11 +271,15 @@ const FinalizedLocations: React.FC = () => {
                       <div className="mb-4">
                         <div className="flex flex-wrap gap-1">
                           {location.permits.slice(0, 3).map((permit, index) => {
-                            const permitName = typeof permit === "string" ? permit : permit.name;
-                            const isRequired = typeof permit === "object" ? permit.required : true;
+                            const permitName =
+                              typeof permit === "string" ? permit : permit.name;
+                            const isRequired =
+                              typeof permit === "object"
+                                ? permit.required
+                                : true;
 
                             return (
-                              <span 
+                              <span
                                 key={`permit-${location._id}-${index}`}
                                 className={`inline-block text-xs px-2 py-1 rounded-full ${
                                   isRequired
@@ -235,7 +288,9 @@ const FinalizedLocations: React.FC = () => {
                                 }`}
                               >
                                 {permitName}
-                                {typeof permit === "object" && permit.required && " *"}
+                                {typeof permit === "object" &&
+                                  permit.required &&
+                                  " *"}
                               </span>
                             );
                           })}
@@ -253,19 +308,40 @@ const FinalizedLocations: React.FC = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          openMapInNewTab(location.coordinates.lat, location.coordinates.lng);
+                          openMapInNewTab(
+                            location.coordinates.lat,
+                            location.coordinates.lng
+                          );
                         }}
                         className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
                       >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
                         </svg>
                         View Map
                       </button>
-                      
+
                       <span className="text-xs text-gray-500">
-                        Finalized {location.finalizedAt ? new Date(location.finalizedAt).toLocaleDateString() : new Date(location.updatedAt).toLocaleDateString()}
+                        Finalized{" "}
+                        {location.finalizedAt
+                          ? new Date(location.finalizedAt).toLocaleDateString()
+                          : new Date(location.updatedAt).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
@@ -280,60 +356,88 @@ const FinalizedLocations: React.FC = () => {
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-full overflow-y-auto">
               <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">{selectedLocation.title}</h2>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {selectedLocation.title}
+                </h2>
                 <button
                   onClick={() => setSelectedLocation(null)}
                   className="text-gray-400 hover:text-gray-600"
                 >
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
-              
+
               <div className="p-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* Left Column - Details */}
                   <div className="space-y-6">
                     {/* Image Gallery */}
                     <div>
-                      {selectedLocation.images && selectedLocation.images.length > 0 ? (
+                      {selectedLocation.images &&
+                      selectedLocation.images.length > 0 ? (
                         <div>
-                          <img 
-                            src={selectedLocation.images[0]} 
-                            alt={selectedLocation.title || selectedLocation.name}
+                          <img
+                            src={selectedLocation.images[0]}
+                            alt={
+                              selectedLocation.title || selectedLocation.name
+                            }
                             className="w-full h-64 object-cover rounded-lg mb-2"
                           />
                           {selectedLocation.images.length > 1 && (
                             <div className="grid grid-cols-4 gap-2">
-                              {selectedLocation.images.slice(1, 5).map((image, index) => (
-                                <img
-                                  key={index}
-                                  src={image}
-                                  alt={`${selectedLocation.title || selectedLocation.name} ${index + 2}`}
-                                  className="w-full h-16 object-cover rounded"
-                                />
-                              ))}
+                              {selectedLocation.images
+                                .slice(1, 5)
+                                .map((image, index) => (
+                                  <img
+                                    key={index}
+                                    src={image}
+                                    alt={`${
+                                      selectedLocation.title ||
+                                      selectedLocation.name
+                                    } ${index + 2}`}
+                                    className="w-full h-16 object-cover rounded"
+                                  />
+                                ))}
                             </div>
                           )}
                         </div>
-                      ) : selectedLocation.photos && selectedLocation.photos.length > 0 ? (
+                      ) : selectedLocation.photos &&
+                        selectedLocation.photos.length > 0 ? (
                         <div>
-                          <img 
-                            src={selectedLocation.photos[0].url} 
-                            alt={selectedLocation.title || selectedLocation.name}
+                          <img
+                            src={selectedLocation.photos[0].url}
+                            alt={
+                              selectedLocation.title || selectedLocation.name
+                            }
                             className="w-full h-64 object-cover rounded-lg mb-2"
                           />
                           {selectedLocation.photos.length > 1 && (
                             <div className="grid grid-cols-4 gap-2">
-                              {selectedLocation.photos.slice(1, 5).map((photo, index) => (
-                                <img
-                                  key={index}
-                                  src={photo.url}
-                                  alt={`${selectedLocation.title || selectedLocation.name} ${index + 2}`}
-                                  className="w-full h-16 object-cover rounded"
-                                />
-                              ))}
+                              {selectedLocation.photos
+                                .slice(1, 5)
+                                .map((photo, index) => (
+                                  <img
+                                    key={index}
+                                    src={photo.url}
+                                    alt={`${
+                                      selectedLocation.title ||
+                                      selectedLocation.name
+                                    } ${index + 2}`}
+                                    className="w-full h-16 object-cover rounded"
+                                  />
+                                ))}
                             </div>
                           )}
                         </div>
@@ -365,14 +469,18 @@ const FinalizedLocations: React.FC = () => {
                     {/* Rating */}
                     {selectedLocation.rating !== undefined && (
                       <div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">Rating</h3>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          Rating
+                        </h3>
                         <div className="flex items-center gap-2">
                           <div className="flex items-center">
                             {[...Array(10)].map((_, i) => (
                               <svg
                                 key={i}
                                 className={`w-5 h-5 ${
-                                  i < selectedLocation.rating! ? 'text-yellow-500' : 'text-gray-300'
+                                  i < selectedLocation.rating!
+                                    ? "text-yellow-500"
+                                    : "text-gray-300"
                                 }`}
                                 fill="currentColor"
                                 viewBox="0 0 20 20"
@@ -387,128 +495,214 @@ const FinalizedLocations: React.FC = () => {
                         </div>
                       </div>
                     )}
-                    
+
                     <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">Description</h3>
-                      <p className="text-gray-700">{selectedLocation.description || selectedLocation.reason || 'No description available'}</p>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        Description
+                      </h3>
+                      <p className="text-gray-700">
+                        {selectedLocation.description ||
+                          selectedLocation.reason ||
+                          "No description available"}
+                      </p>
                     </div>
 
                     {/* Address */}
                     {selectedLocation.address && (
                       <div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">Address</h3>
-                        <p className="text-gray-700">{selectedLocation.address}</p>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          Address
+                        </h3>
+                        <p className="text-gray-700">
+                          {selectedLocation.address}
+                        </p>
                       </div>
                     )}
 
                     {/* Tags */}
-                    {selectedLocation.tags && selectedLocation.tags.length > 0 && (
-                      <div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">Tags</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedLocation.tags.map((tag, index) => (
-                            <span 
-                              key={index}
-                              className="inline-block bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full"
-                            >
-                              {tag}
-                            </span>
-                          ))}
+                    {selectedLocation.tags &&
+                      selectedLocation.tags.length > 0 && (
+                        <div>
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">
+                            Tags
+                          </h3>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedLocation.tags.map((tag, index) => (
+                              <span
+                                key={index}
+                                className="inline-block bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
                     {/* Filming Details */}
                     {selectedLocation.filmingDetails && (
                       <div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">Filming Details</h3>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          Filming Details
+                        </h3>
                         <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                           {selectedLocation.filmingDetails.bestTimeToFilm && (
                             <div>
-                              <span className="font-medium text-gray-700">Best Time to Film:</span>
-                              <span className="ml-2 text-gray-600">{selectedLocation.filmingDetails.bestTimeToFilm}</span>
+                              <span className="font-medium text-gray-700">
+                                Best Time to Film:
+                              </span>
+                              <span className="ml-2 text-gray-600">
+                                {selectedLocation.filmingDetails.bestTimeToFilm}
+                              </span>
                             </div>
                           )}
                           {selectedLocation.filmingDetails.accessibility && (
                             <div>
-                              <span className="font-medium text-gray-700">Accessibility:</span>
-                              <span className="ml-2 text-gray-600">{selectedLocation.filmingDetails.accessibility}</span>
+                              <span className="font-medium text-gray-700">
+                                Accessibility:
+                              </span>
+                              <span className="ml-2 text-gray-600">
+                                {selectedLocation.filmingDetails.accessibility}
+                              </span>
                             </div>
                           )}
                           {selectedLocation.filmingDetails.parking && (
                             <div>
-                              <span className="font-medium text-gray-700">Parking:</span>
-                              <span className="ml-2 text-gray-600">{selectedLocation.filmingDetails.parking}</span>
+                              <span className="font-medium text-gray-700">
+                                Parking:
+                              </span>
+                              <span className="ml-2 text-gray-600">
+                                {selectedLocation.filmingDetails.parking}
+                              </span>
                             </div>
                           )}
                           {selectedLocation.filmingDetails.powerAccess && (
                             <div>
-                              <span className="font-medium text-gray-700">Power Access:</span>
-                              <span className="ml-2 text-gray-600">{selectedLocation.filmingDetails.powerAccess}</span>
+                              <span className="font-medium text-gray-700">
+                                Power Access:
+                              </span>
+                              <span className="ml-2 text-gray-600">
+                                {selectedLocation.filmingDetails.powerAccess}
+                              </span>
                             </div>
                           )}
                           {selectedLocation.filmingDetails.crowdLevel && (
                             <div>
-                              <span className="font-medium text-gray-700">Crowd Level:</span>
-                              <span className="ml-2 text-gray-600">{selectedLocation.filmingDetails.crowdLevel}</span>
+                              <span className="font-medium text-gray-700">
+                                Crowd Level:
+                              </span>
+                              <span className="ml-2 text-gray-600">
+                                {selectedLocation.filmingDetails.crowdLevel}
+                              </span>
                             </div>
                           )}
-                          {selectedLocation.filmingDetails.weatherConsiderations && (
+                          {selectedLocation.filmingDetails
+                            .weatherConsiderations && (
                             <div>
-                              <span className="font-medium text-gray-700">Weather Considerations:</span>
-                              <span className="ml-2 text-gray-600">{selectedLocation.filmingDetails.weatherConsiderations}</span>
+                              <span className="font-medium text-gray-700">
+                                Weather Considerations:
+                              </span>
+                              <span className="ml-2 text-gray-600">
+                                {
+                                  selectedLocation.filmingDetails
+                                    .weatherConsiderations
+                                }
+                              </span>
                             </div>
                           )}
                         </div>
                       </div>
                     )}
 
-                    {selectedLocation.permits && selectedLocation.permits.length > 0 && (
-                      <div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">Permits</h3>
-                        <div className="space-y-3">
-                          {selectedLocation.permits.map((permit, index) => {
-                            const permitName = typeof permit === "string" ? permit : permit.name;
-                            const isRequired = typeof permit === "object" ? permit.required : true;
-                            const permitObj = typeof permit === "object" ? permit : null;
+                    {selectedLocation.permits &&
+                      selectedLocation.permits.length > 0 && (
+                        <div>
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">
+                            Permits
+                          </h3>
+                          <div className="space-y-3">
+                            {selectedLocation.permits.map((permit, index) => {
+                              const permitName =
+                                typeof permit === "string"
+                                  ? permit
+                                  : permit.name;
+                              const isRequired =
+                                typeof permit === "object"
+                                  ? permit.required
+                                  : true;
+                              const permitObj =
+                                typeof permit === "object" ? permit : null;
 
-                            return (
-                              <div key={index} className="border rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="font-medium text-gray-900">{permitName}</span>
-                                  <span className={`inline-block text-xs px-2 py-1 rounded-full ${
-                                    isRequired ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
-                                  }`}>
-                                    {isRequired ? "Required" : "Optional"}
-                                  </span>
-                                </div>
-                                {permitObj && (
-                                  <div className="space-y-1 text-sm text-gray-600">
-                                    {permitObj.authority && (
-                                      <div><span className="font-medium">Authority:</span> {permitObj.authority}</div>
-                                    )}
-                                    {permitObj.estimatedCost && (
-                                      <div><span className="font-medium">Estimated Cost:</span> {permitObj.estimatedCost}</div>
-                                    )}
-                                    {permitObj.processingTime && (
-                                      <div><span className="font-medium">Processing Time:</span> {permitObj.processingTime}</div>
-                                    )}
-                                    {permitObj.notes && (
-                                      <div><span className="font-medium">Notes:</span> {permitObj.notes}</div>
-                                    )}
+                              return (
+                                <div
+                                  key={index}
+                                  className="border rounded-lg p-4"
+                                >
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="font-medium text-gray-900">
+                                      {permitName}
+                                    </span>
+                                    <span
+                                      className={`inline-block text-xs px-2 py-1 rounded-full ${
+                                        isRequired
+                                          ? "bg-red-100 text-red-800"
+                                          : "bg-green-100 text-green-800"
+                                      }`}
+                                    >
+                                      {isRequired ? "Required" : "Optional"}
+                                    </span>
                                   </div>
-                                )}
-                              </div>
-                            );
-                          })}
+                                  {permitObj && (
+                                    <div className="space-y-1 text-sm text-gray-600">
+                                      {permitObj.authority && (
+                                        <div>
+                                          <span className="font-medium">
+                                            Authority:
+                                          </span>{" "}
+                                          {permitObj.authority}
+                                        </div>
+                                      )}
+                                      {permitObj.estimatedCost && (
+                                        <div>
+                                          <span className="font-medium">
+                                            Estimated Cost:
+                                          </span>{" "}
+                                          {permitObj.estimatedCost}
+                                        </div>
+                                      )}
+                                      {permitObj.processingTime && (
+                                        <div>
+                                          <span className="font-medium">
+                                            Processing Time:
+                                          </span>{" "}
+                                          {permitObj.processingTime}
+                                        </div>
+                                      )}
+                                      {permitObj.notes && (
+                                        <div>
+                                          <span className="font-medium">
+                                            Notes:
+                                          </span>{" "}
+                                          {permitObj.notes}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
                     <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">Location</h3>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        Location
+                      </h3>
                       <p className="text-gray-700 mb-3">
-                        Coordinates: {selectedLocation.coordinates.lat.toFixed(6)}, {selectedLocation.coordinates.lng.toFixed(6)}
+                        Coordinates:{" "}
+                        {selectedLocation.coordinates.lat.toFixed(6)},{" "}
+                        {selectedLocation.coordinates.lng.toFixed(6)}
                       </p>
                       {selectedLocation.placeId && (
                         <p className="text-gray-500 text-sm mb-3">
@@ -516,13 +710,33 @@ const FinalizedLocations: React.FC = () => {
                         </p>
                       )}
                       <button
-                        onClick={() => openMapInNewTab(selectedLocation.coordinates.lat, selectedLocation.coordinates.lng)}
+                        onClick={() =>
+                          openMapInNewTab(
+                            selectedLocation.coordinates.lat,
+                            selectedLocation.coordinates.lng
+                          )
+                        }
                         className="px-4 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-sm flex items-center gap-2 font-medium transition-opacity"
-                        style={{ backgroundColor: '#FCCA00', color: '#1F1F1F' }}
+                        style={{ backgroundColor: "#FCCA00", color: "#1F1F1F" }}
                       >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
                         </svg>
                         View on Google Maps
                       </button>
@@ -531,25 +745,43 @@ const FinalizedLocations: React.FC = () => {
 
                   {/* Right Column - Notes */}
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Notes</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Notes
+                    </h3>
                     <div className="space-y-3 max-h-96 overflow-y-auto">
                       {locationNotes.length === 0 ? (
-                        <p className="text-gray-500 text-sm">No notes available.</p>
+                        <p className="text-gray-500 text-sm">
+                          No notes available.
+                        </p>
                       ) : (
-                        locationNotes.map((note) => (
-                          <div key={note.id} className="bg-gray-50 rounded-lg p-3">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm font-medium text-gray-900">{note.author}</span>
-                              <span className="text-xs text-gray-500">
-                                {new Date(note.timestamp).toLocaleString()}
+                        locationNotes.map((note) => {
+                          // Safety check for populated author
+                          const authorName = note.author?.username || "Unknown";
+                          const authorRole =
+                            note.author?.role || note.role || "user";
+
+                          return (
+                            <div
+                              key={note._id}
+                              className="bg-gray-50 rounded-lg p-3"
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-medium text-gray-900">
+                                  {authorName}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {new Date(note.createdAt).toLocaleString()}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-700">
+                                {note.text}
+                              </p>
+                              <span className="inline-block bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full mt-2">
+                                {authorRole}
                               </span>
                             </div>
-                            <p className="text-sm text-gray-700">{note.content}</p>
-                            <span className="inline-block bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full mt-2">
-                              {note.role}
-                            </span>
-                          </div>
-                        ))
+                          );
+                        })
                       )}
                     </div>
                   </div>

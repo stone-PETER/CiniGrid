@@ -297,7 +297,7 @@ const verifyLocationWithGooglePlaces = async (geminiLocation) => {
 
 export const findAndRankLocations = async (description, options = {}) => {
   const startTime = Date.now();
-  const { forceRefresh = false, maxResults = 5 } = options;
+  const { projectId, userId, forceRefresh = false, maxResults = 5 } = options;
 
   if (!description || description.trim().length === 0) {
     throw new Error("Description is required");
@@ -305,20 +305,27 @@ export const findAndRankLocations = async (description, options = {}) => {
 
   const descriptionHash = generateDescriptionHash(description);
 
+  // Check cache - filter by projectId if provided
   if (!forceRefresh) {
-    const cached = await AIRecommendation.findOne({ descriptionHash });
+    const cacheQuery = { descriptionHash };
+    if (projectId) {
+      cacheQuery.projectId = projectId;
+    }
+
+    const cached = await AIRecommendation.findOne(cacheQuery);
     if (cached) {
       await cached.recordAccess();
       console.log(
         `✅ Cache hit for description hash: ${descriptionHash.substring(
           0,
           8
-        )}...`
+        )}...${projectId ? ` (project: ${projectId})` : ""}`
       );
       return {
         success: true,
         cached: true,
         description: cached.description,
+        projectId: cached.projectId,
         results: cached.results.slice(0, maxResults),
         metadata: {
           ...cached.metadata,
@@ -331,7 +338,9 @@ export const findAndRankLocations = async (description, options = {}) => {
   }
 
   console.log(
-    `\n🔍 NEW HYBRID APPROACH: Processing request for: "${description}"`
+    `\n🔍 NEW HYBRID APPROACH: Processing request for: "${description}"${
+      projectId ? ` (project: ${projectId})` : ""
+    }`
   );
 
   console.log("🤖 Step 1: Generating locations with Gemini AI...");
@@ -375,6 +384,7 @@ export const findAndRankLocations = async (description, options = {}) => {
   let cacheStatus = "not-saved";
   try {
     const recommendation = new AIRecommendation({
+      projectId: projectId || null, // Store projectId for project-scoped searches
       description,
       descriptionHash,
       results: results,
@@ -392,7 +402,11 @@ export const findAndRankLocations = async (description, options = {}) => {
     });
 
     await recommendation.save();
-    console.log(`💾 Cached results for future use (expires in 7 days)\n`);
+    console.log(
+      `💾 Cached results for future use (expires in 7 days)${
+        projectId ? ` (project: ${projectId})` : ""
+      }\n`
+    );
     cacheStatus = "saved";
   } catch (cacheError) {
     console.warn(
@@ -407,6 +421,7 @@ export const findAndRankLocations = async (description, options = {}) => {
     cached: false,
     cacheStatus,
     description,
+    projectId,
     results: results,
     metadata: {
       totalGenerated: geminiLocations.length,

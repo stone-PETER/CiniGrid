@@ -1,5 +1,7 @@
-import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import ProjectSelector from "./ProjectSelector";
+import CreateProjectModal from "./CreateProjectModal";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -8,12 +10,13 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const navigationItems = [
-    { id: 'board', label: 'Board', path: '/board' },
-    { id: 'scenes', label: 'Scenes', path: '/scenes' },
-    { id: 'tasks', label: 'Tasks', path: '/tasks' },
-    { id: 'locations', label: 'Locations', path: '/locations' },
+    { id: "board", label: "Board", path: "/board" },
+    { id: "scenes", label: "Scenes", path: "/scenes" },
+    { id: "tasks", label: "Tasks", path: "/tasks" },
+    { id: "locations", label: "Locations", path: "/locations" },
   ];
 
   const currentPath = location.pathname;
@@ -23,39 +26,50 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#7A7A7A' }}>
+    <div className="min-h-screen" style={{ backgroundColor: "#7A7A7A" }}>
       {/* Header - Two Lines */}
       <header className="sticky top-0 z-50">
         {/* First Line - Product Name */}
-        <div className="h-12 flex items-center justify-center" style={{ backgroundColor: '#1F1F1F' }}>
-          <h1 
+        <div
+          className="h-12 flex items-center justify-center"
+          style={{ backgroundColor: "#1F1F1F" }}
+        >
+          <h1
             className="text-2xl font-bold tracking-wide"
-            style={{ color: '#FCCA00' }}
+            style={{ color: "#FCCA00" }}
           >
             CiniGrid
           </h1>
         </div>
-        
+
         {/* Second Line - Navigation */}
-        <nav className="h-12" style={{ backgroundColor: '#FCCA00' }}>
-          <div className="h-full flex items-center justify-center">
+        <nav className="h-12" style={{ backgroundColor: "#FCCA00" }}>
+          <div className="h-full flex items-center justify-between px-4">
+            {/* Left: Project Selector */}
+            <div className="flex-shrink-0">
+              <ProjectSelector onCreateNew={() => setShowCreateModal(true)} />
+            </div>
+
+            {/* Center: Navigation */}
             <div className="flex space-x-1">
               {navigationItems.map((item) => {
-                const isActive = currentPath === item.path || 
-                  (item.path === '/locations' && (currentPath === '/' || currentPath === '/scout'));
-                
+                const isActive =
+                  currentPath === item.path ||
+                  (item.path === "/locations" &&
+                    (currentPath === "/" || currentPath === "/scout"));
+
                 return (
                   <button
                     key={item.id}
                     onClick={() => handleNavigation(item.path)}
                     className={`px-6 py-2 font-bold text-sm transition-all duration-200 ${
                       isActive
-                        ? 'bg-black text-white shadow-inner'
-                        : 'hover:bg-black hover:bg-opacity-10'
+                        ? "bg-black text-white shadow-inner"
+                        : "hover:bg-black hover:bg-opacity-10"
                     }`}
-                    style={{ 
-                      color: isActive ? '#FFFFFF' : '#1F1F1F',
-                      backgroundColor: isActive ? '#1F1F1F' : 'transparent'
+                    style={{
+                      color: isActive ? "#FFFFFF" : "#1F1F1F",
+                      backgroundColor: isActive ? "#1F1F1F" : "transparent",
                     }}
                   >
                     {item.label}
@@ -63,14 +77,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 );
               })}
             </div>
+
+            {/* Right: Placeholder for balance */}
+            <div className="flex-shrink-0 w-[200px]"></div>
           </div>
         </nav>
       </header>
 
+      {/* Create Project Modal */}
+      <CreateProjectModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+      />
+
       {/* Main Content */}
-      <main className="min-h-[calc(100vh-96px)]">
-        {children}
-      </main>
+      <main className="min-h-[calc(100vh-96px)]">{children}</main>
     </div>
   );
 };

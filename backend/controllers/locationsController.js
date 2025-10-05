@@ -307,7 +307,14 @@ export const addToPotential = async (req, res) => {
         : "No user"
     );
 
-    const { suggestionId, suggestionData, manualData } = req.body;
+    const { suggestionId, suggestionData, manualData, projectId } = req.body;
+
+    // projectId is optional for backward compatibility, but recommended
+    if (!projectId) {
+      console.warn(
+        "⚠️ Adding location without projectId - won't be project-scoped"
+      );
+    }
 
     let locationData;
 
@@ -323,36 +330,38 @@ export const addToPotential = async (req, res) => {
         coordinates: suggestionData.coordinates,
         address: suggestionData.address,
         region: suggestionData.region || suggestionData.address,
-        
+        projectId: projectId || null, // Store projectId for project-scoped locations
+
         // Enhanced fields from hybrid approach
         rating: suggestionData.rating,
         verified: suggestionData.verified || false,
         placeId: suggestionData.placeId,
-        
+
         // Images - handle multiple sources
-        images: suggestionData.images || 
-                (suggestionData.photos && suggestionData.photos.map(p => p.url)) || 
-                (suggestionData.imageUrl ? [suggestionData.imageUrl] : []),
+        images:
+          suggestionData.images ||
+          (suggestionData.photos && suggestionData.photos.map((p) => p.url)) ||
+          (suggestionData.imageUrl ? [suggestionData.imageUrl] : []),
         photos: suggestionData.photos || [],
-        
+
         // Tags and types
         tags: suggestionData.tags || suggestionData.types || [],
         googleTypes: suggestionData.googleTypes || [],
-        
+
         // Filming details
         filmingDetails: suggestionData.filmingDetails || {},
-        
+
         // Permits - ensure proper format
-        permits: (suggestionData.permits || []).map(permit => {
-          if (typeof permit === 'string') {
+        permits: (suggestionData.permits || []).map((permit) => {
+          if (typeof permit === "string") {
             return { name: permit, required: true };
           }
           return permit;
         }),
-        
+
         estimatedCost: suggestionData.estimatedCost,
         mapsLink: suggestionData.mapsLink,
-        
+
         addedBy: req.user._id,
       };
     } else if (suggestionId) {
@@ -377,6 +386,7 @@ export const addToPotential = async (req, res) => {
         description: suggestion.description,
         coordinates: suggestion.coordinates,
         region: suggestion.region,
+        projectId: projectId || null,
         permits: suggestion.permits,
         images: suggestion.images || [],
         tags: suggestion.tags || [],
@@ -428,6 +438,7 @@ export const addToPotential = async (req, res) => {
         description: manualData.description,
         coordinates: manualData.coordinates,
         region: manualData.region,
+        projectId: projectId || null,
         permits: transformedPermits,
         images: manualData.images || [],
         tags: manualData.tags || [],
@@ -502,7 +513,17 @@ export const addToPotential = async (req, res) => {
 // Get all potential locations
 export const getPotentialLocations = async (req, res) => {
   try {
-    const locations = await PotentialLocation.find()
+    const { projectId } = req.query;
+
+    // Build query - filter by projectId if provided
+    const query = {};
+    if (projectId) {
+      query.projectId = projectId;
+    } else {
+      console.warn("⚠️ Fetching potential locations without projectId filter");
+    }
+
+    const locations = await PotentialLocation.find(query)
       .populate("addedBy", "username role")
       .populate("notes.author", "username role")
       .populate("approvals.userId", "username role")
@@ -513,6 +534,7 @@ export const getPotentialLocations = async (req, res) => {
       data: {
         locations,
         count: locations.length,
+        projectId: projectId || null,
       },
     });
   } catch (error) {
@@ -573,6 +595,7 @@ export const finalizeLocation = async (req, res) => {
       description: potentialLocation.description,
       coordinates: potentialLocation.coordinates,
       region: potentialLocation.region,
+      projectId: potentialLocation.projectId, // Preserve projectId
       permits: potentialLocation.permits,
       images: potentialLocation.images,
       addedBy: potentialLocation.addedBy,
@@ -612,7 +635,17 @@ export const finalizeLocation = async (req, res) => {
 // Get all finalized locations
 export const getFinalizedLocations = async (req, res) => {
   try {
-    const locations = await FinalizedLocation.find()
+    const { projectId } = req.query;
+
+    // Build query - filter by projectId if provided
+    const query = {};
+    if (projectId) {
+      query.projectId = projectId;
+    } else {
+      console.warn("⚠️ Fetching finalized locations without projectId filter");
+    }
+
+    const locations = await FinalizedLocation.find(query)
       .populate("addedBy", "username role")
       .populate("finalizedBy", "username role")
       .populate("notes.author", "username role")
@@ -624,6 +657,7 @@ export const getFinalizedLocations = async (req, res) => {
       data: {
         locations,
         count: locations.length,
+        projectId: projectId || null,
       },
     });
   } catch (error) {
@@ -641,8 +675,16 @@ export const directAddToPotential = async (req, res) => {
     console.log("=== DIRECT ADD TO POTENTIAL REQUEST ===");
     console.log("Request body:", JSON.stringify(req.body, null, 2));
 
-    const { title, description, coordinates, region, permits, images, tags } =
-      req.body;
+    const {
+      title,
+      description,
+      coordinates,
+      region,
+      permits,
+      images,
+      tags,
+      projectId,
+    } = req.body;
 
     // Validation
     if (!title || !description || !coordinates || !region) {
@@ -650,6 +692,13 @@ export const directAddToPotential = async (req, res) => {
         success: false,
         error: "Title, description, coordinates, and region are required.",
       });
+    }
+
+    // projectId is optional for backward compatibility
+    if (!projectId) {
+      console.warn(
+        "⚠️ Direct add without projectId - location won't be project-scoped"
+      );
     }
 
     // Transform permits array - handle both string array and object array formats
@@ -685,6 +734,7 @@ export const directAddToPotential = async (req, res) => {
       description,
       coordinates,
       region,
+      projectId: projectId || null,
       permits: transformedPermits,
       images: images || [],
       tags: tags || [],
@@ -742,8 +792,16 @@ export const directAddToFinalized = async (req, res) => {
     console.log("=== DIRECT ADD TO FINALIZED REQUEST ===");
     console.log("Request body:", JSON.stringify(req.body, null, 2));
 
-    const { title, description, coordinates, region, permits, images, tags } =
-      req.body;
+    const {
+      title,
+      description,
+      coordinates,
+      region,
+      permits,
+      images,
+      tags,
+      projectId,
+    } = req.body;
 
     // Validation
     if (!title || !description || !coordinates || !region) {
@@ -751,6 +809,13 @@ export const directAddToFinalized = async (req, res) => {
         success: false,
         error: "Title, description, coordinates, and region are required.",
       });
+    }
+
+    // projectId is optional for backward compatibility
+    if (!projectId) {
+      console.warn(
+        "⚠️ Direct add to finalized without projectId - location won't be project-scoped"
+      );
     }
 
     // Transform permits array - handle both string array and object array formats
@@ -786,6 +851,7 @@ export const directAddToFinalized = async (req, res) => {
       description,
       coordinates,
       region,
+      projectId: projectId || null,
       permits: transformedPermits,
       images: images || [],
       tags: tags || [],

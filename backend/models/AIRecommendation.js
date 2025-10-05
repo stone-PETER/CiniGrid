@@ -2,6 +2,12 @@ import mongoose from "mongoose";
 
 const aiRecommendationSchema = new mongoose.Schema(
   {
+    projectId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Project",
+      required: false, // Optional - for backward compatibility with orphaned data
+      index: true,
+    },
     description: {
       type: String,
       required: [true, "Description is required"],
