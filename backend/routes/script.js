@@ -7,7 +7,7 @@ import {
 } from "../controllers/scriptController.js";
 import { authenticate } from "../middleware/auth.js";
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true }); // Allow access to :projectId
 
 // Configure multer for file uploads (memory storage)
 const upload = multer({
@@ -29,12 +29,12 @@ const upload = multer({
 router.use(authenticate);
 
 // Upload screenplay and analyze
-router.post("/:projectId/script/upload", upload.single("script"), uploadScript);
+router.post("/upload", upload.single("script"), uploadScript);
 
 // Get script analysis
-router.get("/:projectId/script", getScriptAnalysis);
+router.get("/", getScriptAnalysis);
 
 // Delete script
-router.delete("/:projectId/script", deleteScript);
+router.delete("/", deleteScript);
 
 export default router;
