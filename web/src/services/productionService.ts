@@ -18,10 +18,19 @@ const getAuthHeaders = () => {
   };
 };
 
+// Helper function to get current project ID
+const getCurrentProjectId = () => {
+  return localStorage.getItem("currentProjectId");
+};
+
 // Scene API functions
 export const sceneService = {
   // Get all scenes
-  async getScenes(params: Record<string, string> = {}): Promise<{ success: boolean; data: Scene[]; count: number }> {
+  async getScenes(params: Record<string, string> = {}, projectId?: string): Promise<{ success: boolean; data: Scene[]; count: number }> {
+    const finalProjectId = projectId || getCurrentProjectId();
+    if (finalProjectId) {
+      params.projectId = finalProjectId;
+    }
     const searchParams = new URLSearchParams(params);
     const response = await fetch(`${API_BASE_URL}/scenes?${searchParams}`, {
       headers: getAuthHeaders(),
@@ -44,11 +53,17 @@ export const sceneService = {
   },
 
   // Create new scene
-  async createScene(sceneData: CreateSceneRequest): Promise<{ success: boolean; message: string; data: Scene }> {
+  async createScene(sceneData: CreateSceneRequest, projectId?: string): Promise<{ success: boolean; message: string; data: Scene }> {
+    const finalProjectId = projectId || getCurrentProjectId();
+    const requestData = {
+      ...sceneData,
+      ...(finalProjectId && { projectId: finalProjectId })
+    };
+    
     const response = await fetch(`${API_BASE_URL}/scenes`, {
       method: "POST",
       headers: getAuthHeaders(),
-      body: JSON.stringify(sceneData),
+      body: JSON.stringify(requestData),
     });
     if (!response.ok) {
       throw new Error(`Failed to create scene: ${response.statusText}`);
@@ -82,7 +97,11 @@ export const sceneService = {
   },
 
   // Get scenes by status
-  async getScenesByStatus(status: string, params: Record<string, string> = {}): Promise<{ success: boolean; data: Scene[]; count: number }> {
+  async getScenesByStatus(status: string, params: Record<string, string> = {}, projectId?: string): Promise<{ success: boolean; data: Scene[]; count: number }> {
+    const finalProjectId = projectId || getCurrentProjectId();
+    if (finalProjectId) {
+      params.projectId = finalProjectId;
+    }
     const searchParams = new URLSearchParams(params);
     const response = await fetch(
       `${API_BASE_URL}/scenes/status/${status}?${searchParams}`,
@@ -126,7 +145,11 @@ export const sceneService = {
 // Task API functions
 export const taskService = {
   // Get all tasks
-  async getTasks(params: Record<string, string> = {}): Promise<{ success: boolean; data: Task[]; count: number }> {
+  async getTasks(params: Record<string, string> = {}, projectId?: string): Promise<{ success: boolean; data: Task[]; count: number }> {
+    const finalProjectId = projectId || getCurrentProjectId();
+    if (finalProjectId) {
+      params.projectId = finalProjectId;
+    }
     const searchParams = new URLSearchParams(params);
     const response = await fetch(`${API_BASE_URL}/tasks?${searchParams}`, {
       headers: getAuthHeaders(),
@@ -149,11 +172,17 @@ export const taskService = {
   },
 
   // Create new task
-  async createTask(taskData: CreateTaskRequest): Promise<{ success: boolean; message: string; data: Task }> {
+  async createTask(taskData: CreateTaskRequest, projectId?: string): Promise<{ success: boolean; message: string; data: Task }> {
+    const finalProjectId = projectId || getCurrentProjectId();
+    const requestData = {
+      ...taskData,
+      ...(finalProjectId && { projectId: finalProjectId })
+    };
+    
     const response = await fetch(`${API_BASE_URL}/tasks`, {
       method: "POST",
       headers: getAuthHeaders(),
-      body: JSON.stringify(taskData),
+      body: JSON.stringify(requestData),
     });
     if (!response.ok) {
       throw new Error(`Failed to create task: ${response.statusText}`);
@@ -187,7 +216,11 @@ export const taskService = {
   },
 
   // Get tasks by status
-  async getTasksByStatus(status: string, params: Record<string, string> = {}): Promise<{ success: boolean; data: Task[]; count: number }> {
+  async getTasksByStatus(status: string, params: Record<string, string> = {}, projectId?: string): Promise<{ success: boolean; data: Task[]; count: number }> {
+    const finalProjectId = projectId || getCurrentProjectId();
+    if (finalProjectId) {
+      params.projectId = finalProjectId;
+    }
     const searchParams = new URLSearchParams(params);
     const response = await fetch(
       `${API_BASE_URL}/tasks/status/${status}?${searchParams}`,
@@ -260,7 +293,7 @@ export const taskService = {
 // Combined service for getting board data (scenes and tasks by status)
 export const boardService = {
   // Get all items (scenes and tasks) organized by status
-  async getBoardData(params: Record<string, string> = {}): Promise<{
+  async getBoardData(params: Record<string, string> = {}, projectId?: string): Promise<{
     success: boolean;
     data: BoardData;
     totalScenes: number;
@@ -268,8 +301,8 @@ export const boardService = {
   }> {
     try {
       const [scenesResponse, tasksResponse] = await Promise.all([
-        sceneService.getScenes(params),
-        taskService.getTasks(params),
+        sceneService.getScenes(params, projectId),
+        taskService.getTasks(params, projectId),
       ]);
 
       // Organize by status

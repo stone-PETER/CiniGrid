@@ -18,7 +18,21 @@ export const getScenes = async (req, res) => {
     
     // Build query filter
     const filter = {};
-    if (projectId) filter.projectId = projectId;
+    
+    // Always filter by project - use provided projectId or user's current project
+    const finalProjectId = projectId || req.user?.currentProjectId;
+    if (finalProjectId) {
+      filter.projectId = finalProjectId;
+    } else {
+      // If no project context, return empty array
+      return res.json({
+        success: true,
+        data: [],
+        count: 0,
+        message: "No project selected",
+      });
+    }
+    
     if (status) filter.status = status;
     if (assignedTo) filter.assignedTo = assignedTo;
     if (date) filter.date = date;
@@ -116,6 +130,15 @@ export const createScene = async (req, res) => {
       });
     }
 
+    // Ensure projectId is provided (required for project scoping)
+    const finalProjectId = projectId || req.user?.currentProjectId;
+    if (!finalProjectId) {
+      return res.status(400).json({
+        success: false,
+        message: "Project ID is required. Please select a project.",
+      });
+    }
+
     const scene = new Scene({
       title: title.trim(),
       description: description.trim(),
@@ -137,7 +160,7 @@ export const createScene = async (req, res) => {
       cameraAngles: cameraAngles || [],
       lighting,
       weather,
-      projectId,
+      projectId: finalProjectId, // Ensure project scoping
     });
 
     await scene.save();

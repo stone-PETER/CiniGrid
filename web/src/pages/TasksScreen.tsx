@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { taskService } from '../services/productionService';
+import { useProject } from '../context/ProjectContext';
 import type { Task, CreateTaskRequest } from '../types';
 
 const TasksScreen: React.FC = () => {
+  const { currentProject } = useProject();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,9 +42,15 @@ const TasksScreen: React.FC = () => {
   // Load tasks on component mount
   useEffect(() => {
     loadTasks();
-  }, []);
+  }, [currentProject?._id]); // Reload when project changes
 
   const loadTasks = async () => {
+    if (!currentProject) {
+      setTasks([]);
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
       setError(null);
@@ -52,7 +60,7 @@ const TasksScreen: React.FC = () => {
       if (typeFilter !== 'all') params.type = typeFilter;
       if (priorityFilter !== 'all') params.priority = priorityFilter;
 
-      const response = await taskService.getTasks(params);
+      const response = await taskService.getTasks(params, currentProject._id);
       if (response.success) {
         setTasks(response.data);
       } else {
@@ -68,12 +76,17 @@ const TasksScreen: React.FC = () => {
   // Reload tasks when filters change
   useEffect(() => {
     loadTasks();
-  }, [statusFilter, typeFilter, priorityFilter]);
+  }, [statusFilter, typeFilter, priorityFilter, currentProject?._id]); // Also reload when project changes
 
   const handleCreateTask = async (taskData: CreateTaskRequest) => {
+    if (!currentProject) {
+      setError('No project selected');
+      return;
+    }
+    
     try {
       setError(null);
-      const response = await taskService.createTask(taskData);
+      const response = await taskService.createTask(taskData, currentProject._id);
       if (response.success) {
         await loadTasks(); // Reload tasks
         setShowCreateModal(false);

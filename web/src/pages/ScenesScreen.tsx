@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { sceneService } from '../services/productionService';
+import { useProject } from '../context/ProjectContext';
 import type { Scene, CreateSceneRequest } from '../types';
 
 const ScenesScreen: React.FC = () => {
+  const { currentProject } = useProject();
   const [scenes, setScenes] = useState<Scene[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,9 +53,15 @@ const ScenesScreen: React.FC = () => {
 
   // Load scenes
   const loadScenes = async () => {
+    if (!currentProject) {
+      setScenes([]);
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
-      const response = await sceneService.getScenes();
+      const response = await sceneService.getScenes({}, currentProject._id);
       setScenes(response.data || []);
       setError(null);
     } catch (err) {
@@ -65,7 +73,7 @@ const ScenesScreen: React.FC = () => {
 
   useEffect(() => {
     loadScenes();
-  }, []);
+  }, [currentProject?._id]); // Reload when project changes
 
   // Filter scenes
   const filteredScenes = scenes.filter(scene => {
@@ -79,6 +87,11 @@ const ScenesScreen: React.FC = () => {
   // Create or update scene
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!currentProject) {
+      setError('No project selected');
+      return;
+    }
     
     try {
       const sceneData: CreateSceneRequest = {
@@ -99,7 +112,7 @@ const ScenesScreen: React.FC = () => {
       if (editingScene) {
         await sceneService.updateScene(editingScene._id, sceneData);
       } else {
-        await sceneService.createScene(sceneData);
+        await sceneService.createScene(sceneData, currentProject._id);
       }
 
       // Reset form and close modal

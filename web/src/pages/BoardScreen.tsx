@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { boardService, sceneService, taskService } from '../services/productionService';
+import { useProject } from '../context/ProjectContext';
 import type { Scene, Task, BoardData, CreateSceneRequest, CreateTaskRequest } from '../types';
 
 interface KanbanCard {
@@ -16,6 +17,7 @@ interface KanbanCard {
 }
 
 const BoardScreen: React.FC = () => {
+  const { currentProject } = useProject();
   const [columns] = useState([
     'backlogged',
     'pre-production', 
@@ -49,9 +51,15 @@ const BoardScreen: React.FC = () => {
 
   // Load board data
   const loadBoardData = async () => {
+    if (!currentProject) {
+      setBoardData({});
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
-      const response = await boardService.getBoardData();
+      const response = await boardService.getBoardData({}, currentProject._id);
       setBoardData(response.data);
       setError(null);
     } catch (err) {
@@ -63,7 +71,7 @@ const BoardScreen: React.FC = () => {
 
   useEffect(() => {
     loadBoardData();
-  }, []);
+  }, [currentProject?._id]); // Reload when project changes
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -145,6 +153,11 @@ const BoardScreen: React.FC = () => {
   const handleCreateItem = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!currentProject) {
+      setError('No project selected');
+      return;
+    }
+    
     try {
       const commonData = {
         title: formData.title,
@@ -159,17 +172,15 @@ const BoardScreen: React.FC = () => {
         const sceneData: CreateSceneRequest = {
           ...commonData,
           status: targetStatus as 'backlogged' | 'pre-production' | 'ready' | 'ongoing' | 'in review' | 'completed',
-          projectId: undefined, // Will be set by backend based on user context
         };
-        await sceneService.createScene(sceneData);
+        await sceneService.createScene(sceneData, currentProject?._id);
       } else {
         const taskData: CreateTaskRequest = {
           ...commonData,
           status: targetStatus as 'backlogged' | 'pre-production' | 'ready' | 'ongoing' | 'in review' | 'completed',
           type: 'other',
-          projectId: undefined, // Will be set by backend based on user context
         };
-        await taskService.createTask(taskData);
+        await taskService.createTask(taskData, currentProject?._id);
       }
 
       // Reset form and close modal
