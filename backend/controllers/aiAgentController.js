@@ -10,13 +10,25 @@ import {
 // @access  Private
 export const findLocations = async (req, res) => {
   try {
-    const { description, forceRefresh = false, maxResults = 5 } = req.body;
+    const {
+      description,
+      projectId,
+      forceRefresh = false,
+      maxResults = 5,
+    } = req.body;
 
     if (!description || description.trim().length === 0) {
       return res.status(400).json({
         success: false,
         message: "Description is required",
       });
+    }
+
+    // projectId is optional for backward compatibility, but recommended
+    if (!projectId) {
+      console.warn(
+        "⚠️ AI search without projectId - results won't be project-scoped"
+      );
     }
 
     if (!isAIAgentAvailable()) {
@@ -27,8 +39,10 @@ export const findLocations = async (req, res) => {
       });
     }
 
-    // Call AI Agent service
+    // Call AI Agent service with projectId
     const result = await findAndRankLocations(description, {
+      projectId,
+      userId: req.user.id,
       forceRefresh,
       maxResults,
     });

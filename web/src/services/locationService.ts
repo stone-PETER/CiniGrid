@@ -105,10 +105,13 @@ export const aiService = {
 // Location management endpoints
 export const locationService = {
   // Potential locations
-  getPotentialLocations: async (): Promise<ApiResponse<Location[]>> => {
+  getPotentialLocations: async (
+    projectId?: string
+  ): Promise<ApiResponse<Location[]>> => {
     return apiCall(
       async () => {
-        const response = await api.get("/locations/potential");
+        const params = projectId ? { projectId } : {};
+        const response = await api.get("/locations/potential", { params });
         // Backend returns { success: true, data: { locations: [], count: 0 } }
         // Frontend expects { success: true, data: [] }
         return {
@@ -127,7 +130,18 @@ export const locationService = {
     id: string
   ): Promise<ApiResponse<Location>> => {
     return apiCall(
-      () => api.get(`/locations/potential/${id}`),
+      async () => {
+        const response = await api.get(`/locations/potential/${id}`);
+        // Backend returns { success: true, data: { location: {...} } }
+        // Frontend expects { success: true, data: {...} }
+        return {
+          data: {
+            success: response.data.success,
+            data: response.data.data?.location || response.data.data,
+            message: response.data.message,
+          },
+        };
+      },
       () => mockApiService.locations.getPotentialLocationDetail(id)
     );
   },
@@ -136,23 +150,57 @@ export const locationService = {
     locationData: AddLocationRequest
   ): Promise<ApiResponse<Location>> => {
     return apiCall(
-      () => api.post("/locations/potential", locationData),
+      async () => {
+        const response = await api.post("/locations/potential", locationData);
+        // Backend returns { success: true, data: { location: {...} } }
+        // Frontend expects { success: true, data: {...} }
+        return {
+          data: {
+            success: response.data.success,
+            data: response.data.data?.location || response.data.data,
+            message: response.data.message,
+          },
+        };
+      },
       () => mockApiService.locations.addPotentialLocation(locationData)
     );
   },
 
-  addPotentialFromSuggestion: async (suggestion: any): Promise<ApiResponse<Location>> => {
+  addPotentialFromSuggestion: async (
+    suggestion: any,
+    projectId?: string
+  ): Promise<ApiResponse<Location>> => {
     return apiCall(
-      () => api.post('/locations/potential', { suggestionData: suggestion }),
-      () => mockApiService.locations.addPotentialLocation({ suggestionData: suggestion })
+      async () => {
+        const response = await api.post("/locations/potential", {
+          suggestionData: suggestion,
+          projectId,
+        });
+        // Backend returns { success: true, data: { location: {...} } }
+        // Frontend expects { success: true, data: {...} }
+        return {
+          data: {
+            success: response.data.success,
+            data: response.data.data?.location || response.data.data,
+            message: response.data.message,
+          },
+        };
+      },
+      () =>
+        mockApiService.locations.addPotentialLocation({
+          suggestionData: suggestion,
+        })
     );
   },
 
   // Finalized locations
-  getFinalizedLocations: async (): Promise<ApiResponse<Location[]>> => {
+  getFinalizedLocations: async (
+    projectId?: string
+  ): Promise<ApiResponse<Location[]>> => {
     return apiCall(
       async () => {
-        const response = await api.get("/locations/finalized");
+        const params = projectId ? { projectId } : {};
+        const response = await api.get("/locations/finalized", { params });
         // Backend returns { success: true, data: { locations: [], count: 0 } }
         // Frontend expects { success: true, data: [] }
         return {
@@ -169,7 +217,18 @@ export const locationService = {
 
   finalizeLocation: async (id: string): Promise<ApiResponse<Location>> => {
     return apiCall(
-      () => api.post(`/locations/potential/${id}/finalize`),
+      async () => {
+        const response = await api.post(`/locations/potential/${id}/finalize`);
+        // Backend returns { success: true, data: { location: {...} } }
+        // Frontend expects { success: true, data: {...} }
+        return {
+          data: {
+            success: response.data.success,
+            data: response.data.data?.location || response.data.data,
+            message: response.data.message,
+          },
+        };
+      },
       () => mockApiService.locations.finalizeLocation(id)
     );
   },
@@ -180,8 +239,12 @@ export const locationService = {
     status: "potential" | "finalized" = "potential"
   ): Promise<ApiResponse<Location>> => {
     return apiCall(
-      () => api.post('/locations/direct-add/finalized', location),
-      () => mockApiService.locations.directAddLocation({ manualData: location.manualData }, 'finalized')
+      () => api.post("/locations/direct-add/finalized", location),
+      () =>
+        mockApiService.locations.directAddLocation(
+          { manualData: location.manualData },
+          "finalized"
+        )
     );
   },
 };

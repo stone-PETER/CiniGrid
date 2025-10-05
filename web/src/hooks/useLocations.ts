@@ -1,12 +1,24 @@
-import { useState, useCallback } from 'react';
-import type { Location, Suggestion, Note, Approval, SearchRequest, AddLocationRequest, AddNoteRequest, AddApprovalRequest, DirectAddRequest } from '../types';
-import { locationScouting } from '../services/locationService';
+import { useState, useCallback } from "react";
+import type {
+  Location,
+  Suggestion,
+  Note,
+  Approval,
+  SearchRequest,
+  AddLocationRequest,
+  AddNoteRequest,
+  AddApprovalRequest,
+  DirectAddRequest,
+} from "../types";
+import { locationScouting } from "../services/locationService";
 
 export const useLocations = () => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [potentialLocations, setPotentialLocations] = useState<Location[]>([]);
   const [finalizedLocations, setFinalizedLocations] = useState<Location[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(
+    null
+  );
   const [locationNotes, setLocationNotes] = useState<Note[]>([]);
   const [locationApprovals, setLocationApprovals] = useState<Approval[]>([]);
   const [loading, setLoading] = useState(false);
@@ -21,10 +33,10 @@ export const useLocations = () => {
       if (response.success) {
         setSuggestions(response.data);
       } else {
-        throw new Error(response.message || 'Search failed');
+        throw new Error(response.message || "Search failed");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
       setSuggestions([]);
     } finally {
       setLoading(false);
@@ -32,58 +44,78 @@ export const useLocations = () => {
   }, []);
 
   // Add potential location from AI suggestion using full suggestion object
-  const addPotentialFromSuggestion = useCallback(async (suggestion: any) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await locationScouting.locations.addPotentialFromSuggestion(suggestion);
-      if (response.success) {
-        setPotentialLocations(prev => [...prev, response.data]);
-        return response.data;
-      } else {
-        throw new Error(response.message || 'Failed to add potential location');
+  const addPotentialFromSuggestion = useCallback(
+    async (suggestion: any, projectId?: string) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response =
+          await locationScouting.locations.addPotentialFromSuggestion(
+            suggestion,
+            projectId
+          );
+        if (response.success) {
+          setPotentialLocations((prev) => [...prev, response.data]);
+          return response.data;
+        } else {
+          throw new Error(
+            response.message || "Failed to add potential location"
+          );
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+        throw err;
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   // Add potential location with manual data
-  const addPotentialLocation = useCallback(async (locationData: AddLocationRequest) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await locationScouting.locations.addPotentialLocation(locationData);
-      if (response.success) {
-        setPotentialLocations(prev => [...prev, response.data]);
-        return response.data;
-      } else {
-        throw new Error(response.message || 'Failed to add potential location');
+  const addPotentialLocation = useCallback(
+    async (locationData: AddLocationRequest) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await locationScouting.locations.addPotentialLocation(
+          locationData
+        );
+        if (response.success) {
+          setPotentialLocations((prev) => [...prev, response.data]);
+          return response.data;
+        } else {
+          throw new Error(
+            response.message || "Failed to add potential location"
+          );
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+        throw err;
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   // Get potential locations list
-  const getPotentialList = useCallback(async () => {
+  const getPotentialList = useCallback(async (projectId?: string) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await locationScouting.locations.getPotentialLocations();
+      const response = await locationScouting.locations.getPotentialLocations(
+        projectId
+      );
       if (response.success) {
         setPotentialLocations(response.data);
       } else {
-        throw new Error(response.message || 'Failed to fetch potential locations');
+        throw new Error(
+          response.message || "Failed to fetch potential locations"
+        );
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -94,36 +126,41 @@ export const useLocations = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await locationScouting.locations.getPotentialLocationDetail(id);
+      const response =
+        await locationScouting.locations.getPotentialLocationDetail(id);
       if (response.success) {
         // Extract location from response.data.location if it's wrapped
         const locationData = (response.data as any).location || response.data;
-        console.log('📍 Setting selected location:', locationData);
+        console.log("📍 Setting selected location:", locationData);
         setSelectedLocation(locationData);
         return locationData;
       } else {
-        throw new Error(response.message || 'Failed to fetch location details');
+        throw new Error(response.message || "Failed to fetch location details");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
   }, []);
 
   // Get finalized locations list
-  const getFinalizedList = useCallback(async () => {
+  const getFinalizedList = useCallback(async (projectId?: string) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await locationScouting.locations.getFinalizedLocations();
+      const response = await locationScouting.locations.getFinalizedLocations(
+        projectId
+      );
       if (response.success) {
         setFinalizedLocations(response.data);
       } else {
-        throw new Error(response.message || 'Failed to fetch finalized locations');
+        throw new Error(
+          response.message || "Failed to fetch finalized locations"
+        );
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -137,14 +174,14 @@ export const useLocations = () => {
       const response = await locationScouting.locations.finalizeLocation(id);
       if (response.success) {
         // Remove from potential, add to finalized
-        setPotentialLocations(prev => prev.filter(loc => loc._id !== id));
-        setFinalizedLocations(prev => [...prev, response.data]);
+        setPotentialLocations((prev) => prev.filter((loc) => loc._id !== id));
+        setFinalizedLocations((prev) => [...prev, response.data]);
         return response.data;
       } else {
-        throw new Error(response.message || 'Failed to finalize location');
+        throw new Error(response.message || "Failed to finalize location");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
       throw err;
     } finally {
       setLoading(false);
@@ -152,44 +189,54 @@ export const useLocations = () => {
   }, []);
 
   // Direct add to potential
-  const directAddToPotential = useCallback(async (locationData: DirectAddRequest) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await locationScouting.locations.directAddToPotential(locationData);
-      if (response.success) {
-        setPotentialLocations(prev => [...prev, response.data]);
-        return response.data;
-      } else {
-        throw new Error(response.message || 'Failed to add location');
+  const directAddToPotential = useCallback(
+    async (locationData: DirectAddRequest) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await locationScouting.locations.directAddToPotential(
+          locationData
+        );
+        if (response.success) {
+          setPotentialLocations((prev) => [...prev, response.data]);
+          return response.data;
+        } else {
+          throw new Error(response.message || "Failed to add location");
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+        throw err;
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   // Direct add to finalized
-  const directAddToFinalized = useCallback(async (locationData: DirectAddRequest) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await locationScouting.locations.directAddToFinalized(locationData);
-      if (response.success) {
-        setFinalizedLocations(prev => [...prev, response.data]);
-        return response.data;
-      } else {
-        throw new Error(response.message || 'Failed to add location');
+  const directAddToFinalized = useCallback(
+    async (locationData: DirectAddRequest) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await locationScouting.locations.directAddToFinalized(
+          locationData
+        );
+        if (response.success) {
+          setFinalizedLocations((prev) => [...prev, response.data]);
+          return response.data;
+        } else {
+          throw new Error(response.message || "Failed to add location");
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+        throw err;
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   // Get notes for location
   const getNotes = useCallback(async (locationId: string) => {
@@ -201,10 +248,10 @@ export const useLocations = () => {
         setLocationNotes(response.data);
         return response.data;
       } else {
-        throw new Error(response.message || 'Failed to fetch notes');
+        throw new Error(response.message || "Failed to fetch notes");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -217,13 +264,13 @@ export const useLocations = () => {
     try {
       const response = await locationScouting.notes.addNote(noteData);
       if (response.success) {
-        setLocationNotes(prev => [...prev, response.data]);
+        setLocationNotes((prev) => [...prev, response.data]);
         return response.data;
       } else {
-        throw new Error(response.message || 'Failed to add note');
+        throw new Error(response.message || "Failed to add note");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
       throw err;
     } finally {
       setLoading(false);
@@ -237,13 +284,13 @@ export const useLocations = () => {
     try {
       const response = await locationScouting.notes.addFinalizedNote(noteData);
       if (response.success) {
-        setLocationNotes(prev => [...prev, response.data]);
+        setLocationNotes((prev) => [...prev, response.data]);
         return response.data;
       } else {
-        throw new Error(response.message || 'Failed to add note');
+        throw new Error(response.message || "Failed to add note");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
       throw err;
     } finally {
       setLoading(false);
@@ -255,15 +302,17 @@ export const useLocations = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await locationScouting.approvals.getApprovals(locationId);
+      const response = await locationScouting.approvals.getApprovals(
+        locationId
+      );
       if (response.success) {
         setLocationApprovals(response.data);
         return response.data;
       } else {
-        throw new Error(response.message || 'Failed to fetch approvals');
+        throw new Error(response.message || "Failed to fetch approvals");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -274,15 +323,17 @@ export const useLocations = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await locationScouting.approvals.addApproval(approvalData);
+      const response = await locationScouting.approvals.addApproval(
+        approvalData
+      );
       if (response.success) {
-        setLocationApprovals(prev => [...prev, response.data]);
+        setLocationApprovals((prev) => [...prev, response.data]);
         return response.data;
       } else {
-        throw new Error(response.message || 'Failed to add approval');
+        throw new Error(response.message || "Failed to add approval");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
       throw err;
     } finally {
       setLoading(false);
@@ -299,7 +350,7 @@ export const useLocations = () => {
     locationApprovals,
     loading,
     error,
-    
+
     // Actions
     searchAi,
     addPotentialFromSuggestion,
@@ -316,6 +367,6 @@ export const useLocations = () => {
     getApprovals,
     addApproval,
     setSelectedLocation,
-    setError
+    setError,
   };
 };

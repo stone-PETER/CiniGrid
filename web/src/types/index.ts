@@ -1,8 +1,8 @@
 export interface User {
   id: string;
   username: string;
-  role: "producer" | "director" | "manager" | "scout" | "crew";
   token?: string;
+  // Note: role removed - users now have roles per project
 }
 
 export interface Location {
@@ -136,6 +136,9 @@ export interface Approval {
 
 export interface SearchRequest {
   prompt: string;
+  projectId?: string; // Optional for backward compatibility, but recommended
+  forceRefresh?: boolean;
+  maxResults?: number;
 }
 
 export interface ApiResponse<T> {
@@ -147,13 +150,11 @@ export interface ApiResponse<T> {
 export interface LoginRequest {
   username: string;
   password: string;
-  role?: string;
 }
 
 export interface RegisterRequest {
   username: string;
   password: string;
-  role: "producer" | "director" | "manager" | "scout" | "crew";
 }
 
 export interface AddLocationRequest {
@@ -181,4 +182,84 @@ export interface AddApprovalRequest {
   status: "approved" | "rejected";
   notes?: string;
   locationId: string;
+}
+
+// ============================================
+// PROJECT & INVITATION TYPES
+// ============================================
+
+export type ProjectRole =
+  | "owner"
+  | "producer"
+  | "director"
+  | "manager"
+  | "scout"
+  | "crew";
+
+export interface Project {
+  _id: string;
+  name: string;
+  description: string;
+  ownerId: string;
+  status: "active" | "archived" | "completed";
+  userRoles?: ProjectRole[]; // Current user's roles in this project
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectMember {
+  _id: string;
+  projectId: string;
+  userId: {
+    _id: string;
+    username: string;
+  };
+  roles: ProjectRole[];
+  joinedAt: string;
+  invitedBy?: {
+    _id: string;
+    username: string;
+  };
+  status: "active" | "inactive";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Invitation {
+  _id: string;
+  projectId: {
+    _id: string;
+    name: string;
+    description: string;
+  };
+  inviterId: {
+    _id: string;
+    username: string;
+  };
+  inviteeId: {
+    _id: string;
+    username: string;
+  };
+  roles: ProjectRole[];
+  status: "pending" | "accepted" | "declined" | "cancelled";
+  message: string;
+  expiresAt: string;
+  respondedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateProjectRequest {
+  name: string;
+  description?: string;
+  members?: Array<{
+    username: string;
+    roles: ProjectRole[];
+  }>;
+}
+
+export interface InviteUserRequest {
+  username: string;
+  roles: ProjectRole[];
+  message?: string;
 }
