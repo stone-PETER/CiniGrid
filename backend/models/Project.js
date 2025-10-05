@@ -32,6 +32,25 @@ const projectSchema = new mongoose.Schema(
       of: mongoose.Schema.Types.Mixed,
       default: {},
     },
+    // Script Analysis fields
+    script: {
+      filename: {
+        type: String,
+        default: null,
+      },
+      uploadDate: {
+        type: Date,
+        default: null,
+      },
+      textContent: {
+        type: String,
+        default: null,
+      },
+      locationPrompts: {
+        type: [String],
+        default: [],
+      },
+    },
   },
   {
     timestamps: true, // Adds createdAt and updatedAt
