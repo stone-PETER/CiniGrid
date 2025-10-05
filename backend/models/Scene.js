@@ -8,6 +8,12 @@ const sceneSchema = new mongoose.Schema(
       required: false, // Optional - for backward compatibility
       index: true,
     },
+    sceneNumber: {
+      type: String,
+      required: false,
+      trim: true,
+      maxlength: 20,
+    },
     title: {
       type: String,
       required: true,
@@ -25,7 +31,7 @@ const sceneSchema = new mongoose.Schema(
       required: false,
     },
     date: {
-      type: String, // Format: "YYYY-MM-DD" 
+      type: String, // Format: "YYYY-MM-DD"
       required: false,
     },
     priority: {
@@ -35,7 +41,14 @@ const sceneSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["backlogged", "pre-production", "ready", "ongoing", "in review", "completed"],
+      enum: [
+        "backlogged",
+        "pre-production",
+        "ready",
+        "ongoing",
+        "in review",
+        "completed",
+      ],
       default: "backlogged",
       index: true,
     },
@@ -141,18 +154,42 @@ const sceneSchema = new mongoose.Schema(
     // Production specific fields
     shotType: {
       type: String,
-      enum: ["wide", "medium", "close-up", "extreme close-up", "establishing", "insert", "other"],
+      enum: [
+        "wide",
+        "medium",
+        "close-up",
+        "extreme close-up",
+        "establishing",
+        "insert",
+        "other",
+      ],
       required: false,
     },
     cameraAngles: [
       {
         type: String,
-        enum: ["front", "back", "side", "overhead", "low", "high", "dutch", "other"],
+        enum: [
+          "front",
+          "back",
+          "side",
+          "overhead",
+          "low",
+          "high",
+          "dutch",
+          "other",
+        ],
       },
     ],
     lighting: {
       type: String,
-      enum: ["natural", "artificial", "mixed", "golden hour", "blue hour", "night"],
+      enum: [
+        "natural",
+        "artificial",
+        "mixed",
+        "golden hour",
+        "blue hour",
+        "night",
+      ],
       required: false,
     },
     weather: {

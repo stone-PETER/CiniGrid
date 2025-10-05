@@ -16,6 +16,7 @@ import invitationRoutes from "./routes/invitations.js";
 import scenesRoutes from "./routes/scenes.js";
 import tasksRoutes from "./routes/tasks.js";
 import scriptRoutes from "./routes/script.js";
+import sceneBreakdownRoutes from "./routes/sceneBreakdown.js";
 
 dotenv.config();
 
@@ -46,6 +47,8 @@ app.get("/", (req, res) => {
       tasks: "/api/tasks (create, manage tasks)",
       script:
         "/api/projects/:projectId/script (upload screenplay, AI analysis)",
+      breakdown:
+        "/api/projects/:projectId/breakdown (scene breakdown, import scenes)",
       ai: "/api/ai",
       locations: "/api/locations",
       aiAgent: "/api/ai-agent",
@@ -58,7 +61,8 @@ app.get("/", (req, res) => {
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
-app.use("/api/projects", scriptRoutes); // Script routes under projects
+app.use("/api/projects/:projectId/script", scriptRoutes); // Script routes
+app.use("/api/projects/:projectId/breakdown", sceneBreakdownRoutes); // Breakdown routes
 app.use("/api/invitations", invitationRoutes);
 app.use("/api/scenes", scenesRoutes);
 app.use("/api/tasks", tasksRoutes);
