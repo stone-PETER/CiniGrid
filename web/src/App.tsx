@@ -19,6 +19,7 @@ import LocationsScreen from "./pages/LocationsScreen";
 import FinalizedLocations from "./pages/FinalizedLocations";
 import MembersSection from "./pages/MembersSection";
 import ForbiddenPage from "./pages/ForbiddenPage";
+import ScriptAnalysisPage from "./pages/ScriptAnalysisPage";
 
 const App = () => {
   return (
@@ -50,6 +51,7 @@ const App = () => {
                 }
               >
                 <Route path="board" element={<BoardScreen />} />
+                <Route path="script" element={<ScriptAnalysisPage />} />
                 <Route path="scenes" element={<ScenesScreen />} />
                 <Route path="tasks" element={<TasksScreen />} />
                 <Route path="locations" element={<LocationsScreen />} />

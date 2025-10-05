@@ -25,6 +25,7 @@ export const authMiddleware = async (req, res, next) => {
     }
 
     req.user = user;
+    req.userId = user._id.toString(); // Add userId for convenience
     next();
   } catch (error) {
     res.status(401).json({
@@ -34,28 +35,9 @@ export const authMiddleware = async (req, res, next) => {
   }
 };
 
-export const roleMiddleware = (allowedRoles) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        error: "Authentication required.",
-      });
-    }
-
-    if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        error: "Access denied. Insufficient permissions.",
-      });
-    }
-
-    next();
-  };
-};
-
 // Aliases for backward compatibility
 export const protect = authMiddleware;
+export const authenticate = authMiddleware; // Add authenticate alias
 export const authorize = (...roles) => roleMiddleware(roles);
 
 // ============================================
