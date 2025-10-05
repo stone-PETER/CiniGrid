@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useProject } from '../context/ProjectContext';
 import { useLocations } from "../hooks/useLocations";
 import SearchBox from "../components/SearchBox";
 import SuggestionsList from "../components/SuggestionsList";
@@ -12,6 +13,7 @@ import type { Location, Suggestion } from "../types";
 
 const LocationsScreen: React.FC = () => {
   const { user } = useAuth();
+  const { currentProject } = useProject();
   const [searchParams] = useSearchParams();
   const {
     suggestions,
@@ -24,6 +26,7 @@ const LocationsScreen: React.FC = () => {
     searchAi,
     addPotentialFromSuggestion,
     getPotentialList,
+    getFinalizedList,
     getPotentialDetail,
     addNote,
     addApproval,
@@ -43,8 +46,12 @@ const LocationsScreen: React.FC = () => {
   });
 
   useEffect(() => {
-    getPotentialList();
-  }, [getPotentialList]);
+    if (currentProject?._id) {
+      console.log('🔄 LocationsScreen: Fetching potential and finalized locations for project:', currentProject._id);
+      getPotentialList(currentProject._id);
+      getFinalizedList(currentProject._id);
+    }
+  }, [getPotentialList, getFinalizedList, currentProject?._id]);
 
   // Auto-search if there's a search parameter from script analysis
   useEffect(() => {
@@ -56,7 +63,7 @@ const LocationsScreen: React.FC = () => {
   }, [searchParams]);
 
   const handleSearch = async (prompt: string) => {
-    await searchAi({ prompt });
+    await searchAi({ prompt, projectId: currentProject?._id });
   };
 
   const handleAddToPotential = async (
@@ -64,7 +71,7 @@ const LocationsScreen: React.FC = () => {
     suggestionIndex: number
   ) => {
     try {
-      await addPotentialFromSuggestion(suggestion);
+      await addPotentialFromSuggestion(suggestion, currentProject?._id);
       setToast({
         message: "Location added to potential list!",
         type: "success",
