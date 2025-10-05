@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useProject } from '../context/ProjectContext';
 import { useLocations } from '../hooks/useLocations';
 import SearchBox from '../components/SearchBox';
 import SuggestionsList from '../components/SuggestionsList';
@@ -11,6 +12,7 @@ import type { Location, Suggestion } from '../types';
 
 const LocationsScreen: React.FC = () => {
   const { user } = useAuth();
+  const { currentProject } = useProject();
   const {
     suggestions,
     potentialLocations,
@@ -22,6 +24,7 @@ const LocationsScreen: React.FC = () => {
     searchAi,
     addPotentialFromSuggestion,
     getPotentialList,
+    getFinalizedList,
     getPotentialDetail,
     addNote,
     addApproval,
@@ -35,16 +38,20 @@ const LocationsScreen: React.FC = () => {
   const [toast, setToast] = useState({ message: '', type: 'success' as 'success' | 'error', visible: false });
 
   useEffect(() => {
-    getPotentialList();
-  }, [getPotentialList]);
+    if (currentProject?._id) {
+      console.log('🔄 LocationsScreen: Fetching potential and finalized locations for project:', currentProject._id);
+      getPotentialList(currentProject._id);
+      getFinalizedList(currentProject._id);
+    }
+  }, [getPotentialList, getFinalizedList, currentProject?._id]);
 
   const handleSearch = async (prompt: string) => {
-    await searchAi({ prompt });
+    await searchAi({ prompt, projectId: currentProject?._id });
   };
 
   const handleAddToPotential = async (suggestion: Suggestion, suggestionIndex: number) => {
     try {
-      await addPotentialFromSuggestion(suggestion);
+      await addPotentialFromSuggestion(suggestion, currentProject?._id);
       setToast({ message: 'Location added to potential list!', type: 'success', visible: true });
       setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 3000);
     } catch (err) {

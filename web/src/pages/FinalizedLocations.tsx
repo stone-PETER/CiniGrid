@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useProject } from "../context/ProjectContext";
 import { useLocations } from "../hooks/useLocations";
 import type { Location } from "../types";
 
 const FinalizedLocations: React.FC = () => {
   const { logout } = useAuth();
+  const { currentProject } = useProject();
   const {
     finalizedLocations,
     locationNotes,
@@ -16,10 +18,33 @@ const FinalizedLocations: React.FC = () => {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(
     null
   );
+  const [refreshKey, setRefreshKey] = useState(0);
 
+  // Force refresh finalized locations whenever the page is visited or project changes
   useEffect(() => {
-    getFinalizedList();
-  }, [getFinalizedList]);
+    if (currentProject?._id) {
+      console.log('🔄 Fetching finalized locations for project:', currentProject._id);
+      getFinalizedList(currentProject._id);
+    }
+  }, [getFinalizedList, currentProject?._id, refreshKey]);
+
+  // Auto-refresh when window regains focus (user comes back to tab)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (currentProject?._id) {
+        console.log('🔄 Window focused - refreshing finalized locations');
+        getFinalizedList(currentProject._id);
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [getFinalizedList, currentProject?._id]);
+
+  // Add a function to manually refresh the list
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1);
+  };
 
   const handleSelectLocation = async (location: Location) => {
     setSelectedLocation(location);
@@ -47,6 +72,14 @@ const FinalizedLocations: React.FC = () => {
               </p>
             </div>
             <div className="flex gap-4">
+              <button
+                onClick={handleRefresh}
+                disabled={loading}
+                className="px-4 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 font-medium transition-opacity"
+                style={{ backgroundColor: "#FCCA00", color: "#1F1F1F" }}
+              >
+                {loading ? 'Refreshing...' : 'Refresh'}
+              </button>
               <a
                 href="/scout"
                 className="px-4 py-2 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 font-medium transition-opacity"

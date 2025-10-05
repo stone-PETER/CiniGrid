@@ -133,7 +133,7 @@ const ScoutDashboard: React.FC = () => {
           "success"
         );
         // Refresh the potential locations list to remove the finalized one
-        getPotentialList();
+        getPotentialList(currentProject?._id);
       } catch (err) {
         console.error("Failed to finalize location:", err);
         showToast("Failed to finalize location. Please try again.", "error");

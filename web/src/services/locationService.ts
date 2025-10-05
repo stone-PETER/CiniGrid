@@ -197,10 +197,15 @@ export const locationService = {
   getFinalizedLocations: async (
     projectId?: string
   ): Promise<ApiResponse<Location[]>> => {
+    console.log("🔍 [LocationService] getFinalizedLocations called with projectId:", projectId);
+    console.log("🔍 [LocationService] About to make API call to /locations/finalized");
     return apiCall(
       async () => {
+        console.log("🔍 [LocationService] Making API GET request to /locations/finalized");
         const params = projectId ? { projectId } : {};
+        console.log("🔍 [LocationService] API params:", params);
         const response = await api.get("/locations/finalized", { params });
+        console.log("🔍 [LocationService] API response received:", response.data);
         // Backend returns { success: true, data: { locations: [], count: 0 } }
         // Frontend expects { success: true, data: [] }
         return {

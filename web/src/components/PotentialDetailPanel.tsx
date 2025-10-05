@@ -559,6 +559,21 @@ const PotentialDetailPanel: React.FC<PotentialDetailPanelProps> = ({
               </div>
             </div>
 
+            {/* Finalize Button */}
+            <div className="mt-6">
+              <button
+                onClick={() => setShowFinalizeConfirm(true)}
+                disabled={loading}
+                className="w-full px-4 py-3 rounded-md hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 font-medium transition-opacity"
+                style={{
+                  backgroundColor: "#1F1F1F",
+                  color: "#FCCA00",
+                }}
+              >
+                Finalize Location
+              </button>
+            </div>
+
             {/* Approvals Section */}
             {canManage && (
               <div>
