@@ -51,6 +51,39 @@ const ScenesScreen: React.FC = () => {
     weather: '',
   });
 
+  // Cast and Crew state for dynamic forms
+  const [cast, setCast] = useState<Array<{name: string; role: string; contact: string}>>([]);
+  const [crew, setCrew] = useState<Array<{name: string; role: string}>>([]);
+
+  // Helper functions for cast and crew management
+  const addCastMember = () => {
+    setCast([...cast, { name: '', role: '', contact: '' }]);
+  };
+
+  const removeCastMember = (index: number) => {
+    setCast(cast.filter((_, i) => i !== index));
+  };
+
+  const updateCastMember = (index: number, field: keyof typeof cast[0], value: string) => {
+    const updated = [...cast];
+    updated[index] = { ...updated[index], [field]: value };
+    setCast(updated);
+  };
+
+  const addCrewMember = () => {
+    setCrew([...crew, { name: '', role: '' }]);
+  };
+
+  const removeCrewMember = (index: number) => {
+    setCrew(crew.filter((_, i) => i !== index));
+  };
+
+  const updateCrewMember = (index: number, field: keyof typeof crew[0], value: string) => {
+    const updated = [...crew];
+    updated[index] = { ...updated[index], [field]: value };
+    setCrew(updated);
+  };
+
   // Load scenes
   const loadScenes = async () => {
     if (!currentProject) {
@@ -104,6 +137,8 @@ const ScenesScreen: React.FC = () => {
         location: formData.location || undefined,
         dependencies: formData.dependencies ? formData.dependencies.split(',').map(d => d.trim()) : [],
         equipment: formData.equipment ? formData.equipment.split(',').map(e => e.trim()) : [],
+        cast: cast.filter(c => c.name.trim() && c.role.trim()), // Only include filled entries
+        crew: crew.filter(c => c.name.trim() && c.role.trim()), // Only include filled entries
         shotType: formData.shotType as any || undefined,
         lighting: formData.lighting as any || undefined,
         weather: formData.weather as any || undefined,
@@ -130,6 +165,8 @@ const ScenesScreen: React.FC = () => {
         lighting: '',
         weather: '',
       });
+      setCast([]);
+      setCrew([]);
       setShowCreateModal(false);
       setEditingScene(null);
       
@@ -167,6 +204,9 @@ const ScenesScreen: React.FC = () => {
       lighting: scene.lighting || '',
       weather: scene.weather || '',
     });
+    // Populate cast and crew arrays
+    setCast(scene.cast ? scene.cast.map(c => ({...c, contact: c.contact || ''})) : []);
+    setCrew(scene.crew || []);
     setShowCreateModal(true);
   };
 
@@ -365,6 +405,52 @@ const ScenesScreen: React.FC = () => {
                     )}
                   </div>
 
+                  {/* Equipment Section */}
+                  {scene.equipment && scene.equipment.length > 0 && (
+                    <div className="mt-3">
+                      <span className="font-semibold text-sm" style={{ color: '#1F1F1F' }}>Equipment:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {scene.equipment.map((item, index) => (
+                          <span 
+                            key={index}
+                            className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800"
+                          >
+                            {item}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Cast Section */}
+                  {scene.cast && scene.cast.length > 0 && (
+                    <div className="mt-3">
+                      <span className="font-semibold text-sm" style={{ color: '#1F1F1F' }}>Cast:</span>
+                      <div className="mt-1 space-y-1">
+                        {scene.cast.map((member, index) => (
+                          <div key={index} className="text-sm" style={{ color: '#7A7A7A' }}>
+                            <span className="font-medium">{member.name}</span> - {member.role}
+                            {member.contact && <span className="text-xs"> ({member.contact})</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Crew Section */}
+                  {scene.crew && scene.crew.length > 0 && (
+                    <div className="mt-3">
+                      <span className="font-semibold text-sm" style={{ color: '#1F1F1F' }}>Crew:</span>
+                      <div className="mt-1 space-y-1">
+                        {scene.crew.map((member, index) => (
+                          <div key={index} className="text-sm" style={{ color: '#7A7A7A' }}>
+                            <span className="font-medium">{member.name}</span> - {member.role}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Additional metadata */}
                   <div className="mt-3 text-xs text-gray-500">
                     {scene.shotType && <span className="mr-4">Shot: {scene.shotType}</span>}
@@ -526,6 +612,97 @@ const ScenesScreen: React.FC = () => {
                   />
                 </div>
 
+                {/* Cast */}
+                <div className="md:col-span-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium">Cast</label>
+                    <button
+                      type="button"
+                      onClick={addCastMember}
+                      className="px-3 py-1 text-xs font-bold rounded hover:opacity-80"
+                      style={{ backgroundColor: '#FCCA00', color: '#1F1F1F' }}
+                    >
+                      + Add Cast Member
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {cast.map((member, index) => (
+                      <div key={index} className="grid grid-cols-12 gap-2 items-center">
+                        <input
+                          type="text"
+                          placeholder="Name"
+                          value={member.name}
+                          onChange={(e) => updateCastMember(index, 'name', e.target.value)}
+                          className="col-span-4 p-2 border border-gray-300 rounded text-sm"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Role"
+                          value={member.role}
+                          onChange={(e) => updateCastMember(index, 'role', e.target.value)}
+                          className="col-span-4 p-2 border border-gray-300 rounded text-sm"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Contact (optional)"
+                          value={member.contact}
+                          onChange={(e) => updateCastMember(index, 'contact', e.target.value)}
+                          className="col-span-3 p-2 border border-gray-300 rounded text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeCastMember(index)}
+                          className="col-span-1 p-2 text-red-600 hover:text-red-800 text-sm"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Crew */}
+                <div className="md:col-span-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium">Crew</label>
+                    <button
+                      type="button"
+                      onClick={addCrewMember}
+                      className="px-3 py-1 text-xs font-bold rounded hover:opacity-80"
+                      style={{ backgroundColor: '#FCCA00', color: '#1F1F1F' }}
+                    >
+                      + Add Crew Member
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {crew.map((member, index) => (
+                      <div key={index} className="grid grid-cols-11 gap-2 items-center">
+                        <input
+                          type="text"
+                          placeholder="Name"
+                          value={member.name}
+                          onChange={(e) => updateCrewMember(index, 'name', e.target.value)}
+                          className="col-span-5 p-2 border border-gray-300 rounded text-sm"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Role"
+                          value={member.role}
+                          onChange={(e) => updateCrewMember(index, 'role', e.target.value)}
+                          className="col-span-5 p-2 border border-gray-300 rounded text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeCrewMember(index)}
+                          className="col-span-1 p-2 text-red-600 hover:text-red-800 text-sm"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Shot Type */}
                 <div>
                   <label className="block text-sm font-medium mb-2">Shot Type</label>
@@ -588,6 +765,8 @@ const ScenesScreen: React.FC = () => {
                   onClick={() => {
                     setShowCreateModal(false);
                     setEditingScene(null);
+                    setCast([]);
+                    setCrew([]);
                     setFormData({
                       title: '',
                       description: '',

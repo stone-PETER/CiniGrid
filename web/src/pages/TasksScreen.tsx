@@ -319,7 +319,38 @@ const TasksScreen: React.FC = () => {
                   )}
                 </div>
 
-                <div className="border-t pt-3">
+                {/* Resources Section */}
+                {task.resources && task.resources.length > 0 && (
+                  <div className="mt-3">
+                    <span className="font-semibold text-sm text-gray-900">Resources:</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {task.resources.map((resource, index) => (
+                        <span 
+                          key={index}
+                          className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800"
+                        >
+                          {resource}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Users/Team Section */}
+                {task.users && task.users.length > 0 && (
+                  <div className="mt-3">
+                    <span className="font-semibold text-sm text-gray-900">Team Members:</span>
+                    <div className="mt-1 space-y-1">
+                      {task.users.map((user, index) => (
+                        <div key={index} className="text-sm text-gray-600">
+                          <span className="font-medium">{user.name}</span> - {user.role}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="border-t pt-3 mt-3">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                   <select
                     value={task.status}
@@ -390,6 +421,24 @@ const TaskModal: React.FC<TaskModalProps> = ({
   taskTypes, 
   priorityLevels 
 }) => {
+  // Users state for dynamic form (similar to crew)
+  const [users, setUsers] = useState<Array<{name: string; role: string}>>([]);
+
+  // Helper functions for users management
+  const addUser = () => {
+    setUsers([...users, { name: '', role: '' }]);
+  };
+
+  const removeUser = (index: number) => {
+    setUsers(users.filter((_, i) => i !== index));
+  };
+
+  const updateUser = (index: number, field: keyof typeof users[0], value: string) => {
+    const updated = [...users];
+    updated[index] = { ...updated[index], [field]: value };
+    setUsers(updated);
+  };
+
   const [formData, setFormData] = useState({
     title: task?.title || '',
     description: task?.description || '',
@@ -404,6 +453,15 @@ const TaskModal: React.FC<TaskModalProps> = ({
     notes: Array.isArray(task?.notes) ? '' : (task?.notes || '')
   });
 
+  // Populate users when task changes
+  React.useEffect(() => {
+    if (task?.users) {
+      setUsers(task.users.map(u => ({ name: u.name, role: u.role })));
+    } else {
+      setUsers([]);
+    }
+  }, [task]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -417,6 +475,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
       assignedTo: formData.assignedTo || undefined,
       dependencies: formData.dependencies ? formData.dependencies.split(',').map((s: string) => s.trim()) : [],
       resources: formData.resources ? formData.resources.split(',').map((s: string) => s.trim()) : [],
+      users: users.filter(u => u.name.trim() && u.role.trim()), // Only include filled entries
       ...(formData.estimatedHours && { estimatedDuration: parseInt(formData.estimatedHours) })
     };
     
@@ -580,6 +639,48 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 className="w-full border rounded-lg px-3 py-2"
                 placeholder="Camera, Lighting kit"
               />
+            </div>
+
+            {/* Users Section */}
+            <div className="md:col-span-2">
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">Team Members</label>
+                <button
+                  type="button"
+                  onClick={addUser}
+                  className="px-3 py-1 text-xs font-bold rounded hover:opacity-80"
+                  style={{ backgroundColor: '#FCCA00', color: '#1F1F1F' }}
+                >
+                  + Add Team Member
+                </button>
+              </div>
+              <div className="space-y-2">
+                {users.map((user, index) => (
+                  <div key={index} className="grid grid-cols-11 gap-2 items-center">
+                    <input
+                      type="text"
+                      placeholder="Name"
+                      value={user.name}
+                      onChange={(e) => updateUser(index, 'name', e.target.value)}
+                      className="col-span-5 p-2 border border-gray-300 rounded text-sm"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Role"
+                      value={user.role}
+                      onChange={(e) => updateUser(index, 'role', e.target.value)}
+                      className="col-span-5 p-2 border border-gray-300 rounded text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeUser(index)}
+                      className="col-span-1 p-2 text-red-600 hover:text-red-800 text-sm"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="md:col-span-2">
