@@ -321,27 +321,36 @@ export const findAndRankLocations = async (description, options = {}) => {
           8
         )}...${projectId ? ` (project: ${projectId})` : ""}`
       );
-      
+
       // Transform cached results to include photo URLs
-      const transformedResults = cached.results.map(location => {
+      const transformedResults = cached.results.map((location) => {
         const transformedLocation = { ...location.toObject() };
-        
+
         // Add URL to each photo if it has a photoReference
-        if (transformedLocation.photos && Array.isArray(transformedLocation.photos)) {
-          transformedLocation.photos = transformedLocation.photos.map(photo => {
-            if (photo.photoReference && !photo.url) {
-              return {
-                ...photo,
-                url: `${process.env.BACKEND_URL || "http://localhost:5000"}/api/photos/place-photo?photoreference=${photo.photoReference}&maxwidth=800`
-              };
+        if (
+          transformedLocation.photos &&
+          Array.isArray(transformedLocation.photos)
+        ) {
+          transformedLocation.photos = transformedLocation.photos.map(
+            (photo) => {
+              if (photo.photoReference && !photo.url) {
+                return {
+                  ...photo,
+                  url: `${
+                    process.env.BACKEND_URL || "http://localhost:5000"
+                  }/api/photos/place-photo?photoreference=${
+                    photo.photoReference
+                  }&maxwidth=800`,
+                };
+              }
+              return photo;
             }
-            return photo;
-          });
+          );
         }
-        
+
         return transformedLocation;
       });
-      
+
       return {
         success: true,
         cached: true,
