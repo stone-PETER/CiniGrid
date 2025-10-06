@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useProject } from "../context/ProjectContext";
 import { useLocations } from "../hooks/useLocations";
+import type { Location as LocationType, Suggestion } from "../types";
 import SearchBox from "../components/SearchBox";
 import SuggestionsList from "../components/SuggestionsList";
 import PotentialLocationsList from "../components/PotentialLocationsList";
@@ -22,7 +23,6 @@ const ScoutDashboard: React.FC = () => {
     error,
     searchAi,
     addPotentialFromSuggestion,
-    addPotentialLocation,
     getPotentialList,
     getPotentialDetail,
     addNote,
@@ -72,10 +72,7 @@ const ScoutDashboard: React.FC = () => {
     });
   };
 
-  const handleAddToPotential = async (
-    suggestion: any,
-    suggestionIndex: number
-  ) => {
+  const handleAddToPotential = async (suggestion: Suggestion) => {
     try {
       // Pass projectId when adding location
       await addPotentialFromSuggestion(suggestion, currentProject?._id);
@@ -84,7 +81,7 @@ const ScoutDashboard: React.FC = () => {
     }
   };
 
-  const handleSelectLocation = async (location: any) => {
+  const handleSelectLocation = async (location: LocationType) => {
     console.log("Selecting location:", location);
     try {
       console.log("Calling getPotentialDetail with ID:", location._id);
@@ -113,8 +110,8 @@ const ScoutDashboard: React.FC = () => {
     if (selectedLocation) {
       try {
         await addApproval({
-          approved: status === "approved",
-          comment: notes,
+          status: status,
+          notes: notes,
           locationId: selectedLocation._id,
         });
       } catch (err) {
@@ -155,13 +152,15 @@ const ScoutDashboard: React.FC = () => {
   }) => {
     try {
       const directAddData = {
-        title: data.manualData.title,
-        description: data.manualData.description,
-        coordinates: data.manualData.coordinates,
-        region: data.manualData.region || "",
-        tags: data.manualData.tags,
-        permits: data.manualData.permits,
-        images: data.manualData.images,
+        manualData: {
+          title: data.manualData.title,
+          description: data.manualData.description,
+          coordinates: data.manualData.coordinates,
+          region: data.manualData.region || "",
+          tags: data.manualData.tags,
+          permits: data.manualData.permits,
+          images: data.manualData.images,
+        },
       };
 
       if (data.status === "potential") {
@@ -287,31 +286,20 @@ const ScoutDashboard: React.FC = () => {
         </div>
 
         {/* Detail Panel - Full Width */}
-        {(() => {
-          console.log(
-            "📍 Detail Panel Check - selectedLocation:",
-            selectedLocation
-          );
-          console.log(
-            "📍 Detail Panel Check - has coordinates:",
-            selectedLocation?.coordinates
-          );
-          return selectedLocation && selectedLocation.coordinates;
-        })() &&
-          selectedLocation && (
-            <div className="mt-8">
-              <PotentialDetailPanel
-                location={selectedLocation}
-                notes={locationNotes}
-                approvals={locationApprovals}
-                currentUser={user}
-                onAddNote={handleAddNote}
-                onAddApproval={handleAddApproval}
-                onFinalize={handleFinalizeLocation}
-                loading={loading}
-              />
-            </div>
-          )}
+        {selectedLocation && (
+          <div className="mt-8">
+            <PotentialDetailPanel
+              location={selectedLocation}
+              notes={locationNotes}
+              approvals={locationApprovals}
+              currentUser={user}
+              onAddNote={handleAddNote}
+              onAddApproval={handleAddApproval}
+              onFinalize={handleFinalizeLocation}
+              loading={loading}
+            />
+          </div>
+        )}
       </main>
 
       {/* Direct Add Form Modal */}

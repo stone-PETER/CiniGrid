@@ -8,7 +8,6 @@ import type {
   AddLocationRequest,
   AddNoteRequest,
   AddApprovalRequest,
-  DirectAddRequest,
 } from "../types";
 import { locationScouting } from "../services/locationService";
 
@@ -161,19 +160,23 @@ export const useLocations = () => {
 
   // Get finalized locations list
   const getFinalizedList = useCallback(async (projectId?: string) => {
-    console.log('🔄 getFinalizedList called with projectId:', projectId);
+    console.log("🔄 getFinalizedList called with projectId:", projectId);
     setLoading(true);
     setError(null);
     // Clear existing data to avoid showing stale results
     setFinalizedLocations([]);
-    
+
     try {
       const response = await locationScouting.locations.getFinalizedLocations(
         projectId
       );
-      console.log('📍 Finalized locations response:', response);
+      console.log("📍 Finalized locations response:", response);
       if (response.success) {
-        console.log('✅ Setting finalized locations:', response.data.length, 'items');
+        console.log(
+          "✅ Setting finalized locations:",
+          response.data.length,
+          "items"
+        );
         setFinalizedLocations(response.data);
       } else {
         throw new Error(
@@ -181,7 +184,7 @@ export const useLocations = () => {
         );
       }
     } catch (err) {
-      console.error('❌ Error fetching finalized locations:', err);
+      console.error("❌ Error fetching finalized locations:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
       setFinalizedLocations([]); // Ensure we clear on error too
     } finally {
@@ -213,7 +216,7 @@ export const useLocations = () => {
 
   // Direct add to potential
   const directAddToPotential = useCallback(
-    async (locationData: DirectAddRequest) => {
+    async (locationData: AddLocationRequest) => {
       setLoading(true);
       setError(null);
       try {
@@ -238,7 +241,7 @@ export const useLocations = () => {
 
   // Direct add to finalized
   const directAddToFinalized = useCallback(
-    async (locationData: DirectAddRequest) => {
+    async (locationData: AddLocationRequest) => {
       setLoading(true);
       setError(null);
       try {

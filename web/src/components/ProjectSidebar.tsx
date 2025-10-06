@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useProject } from "../context/ProjectContext";
 
 interface ProjectSidebarProps {
@@ -8,7 +8,7 @@ interface ProjectSidebarProps {
 
 const ProjectSidebar: React.FC<ProjectSidebarProps> = ({ projectId }) => {
   const navigate = useNavigate();
-  const { projects, currentProject } = useProject();
+  const { projects } = useProject();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleBackToProjects = () => {

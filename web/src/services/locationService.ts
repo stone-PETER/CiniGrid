@@ -196,6 +196,18 @@ export const locationService = {
   ): Promise<ApiResponse<Location>> => {
     return apiCall(() => api.post("/locations/direct-add/finalized", location));
   },
+
+  directAddToPotential: async (
+    location: AddLocationRequest
+  ): Promise<ApiResponse<Location>> => {
+    return apiCall(() => api.post("/locations/direct-add/potential", location));
+  },
+
+  directAddToFinalized: async (
+    location: AddLocationRequest
+  ): Promise<ApiResponse<Location>> => {
+    return apiCall(() => api.post("/locations/direct-add/finalized", location));
+  },
 };
 
 // Notes endpoints
@@ -207,6 +219,32 @@ export const notesService = {
   addNote: async (noteData: AddNoteRequest): Promise<ApiResponse<Note>> => {
     const response = await apiCall(() =>
       api.post(`/locations/potential/${noteData.locationId}/notes`, {
+        text: noteData.text,
+      })
+    );
+
+    // Backend returns { note: {...}, location: {...} }, extract just the note
+    if (
+      response.success &&
+      response.data &&
+      typeof response.data === "object" &&
+      "note" in response.data
+    ) {
+      const noteData = response.data as { note: Note };
+      return {
+        success: true,
+        data: noteData.note,
+      };
+    }
+
+    return response as ApiResponse<Note>;
+  },
+
+  addFinalizedNote: async (
+    noteData: AddNoteRequest
+  ): Promise<ApiResponse<Note>> => {
+    const response = await apiCall(() =>
+      api.post(`/locations/finalized/${noteData.locationId}/notes`, {
         text: noteData.text,
       })
     );
