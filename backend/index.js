@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
 import aiRoutes from "./routes/ai.js";
 import locationsRoutes from "./routes/locations.js";
+import locationRecordsRoutes from "./routes/locationRecords.js";
 import testRoutes from "./routes/test.js";
 import aiAgentRoutes from "./routes/aiAgentRoutes.js";
 import testGeminiOnlyRoutes from "./routes/testGeminiOnly.js";
@@ -69,6 +70,7 @@ app.use("/api/tasks", tasksRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/ai", testGeminiOnlyRoutes); // Test routes under /api/ai
 app.use("/api/locations", locationsRoutes);
+app.use("/api/location-records", locationRecordsRoutes); // New location records routes
 app.use("/api/test", testRoutes);
 app.use("/api/ai-agent", aiAgentRoutes);
 app.use("/api/photos", photosRoutes); // Photo proxy routes

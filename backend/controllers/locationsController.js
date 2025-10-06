@@ -7,6 +7,33 @@ import {
 } from "../services/aiAgent.js";
 
 /**
+ * Helper function to convert photo references to full URLs
+ */
+const convertPhotoReferencesToUrls = (photos) => {
+  if (!photos || !Array.isArray(photos)) return [];
+
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  if (!apiKey) return [];
+
+  return photos
+    .map((photo) => {
+      if (typeof photo === "string") {
+        // Already a URL
+        return photo;
+      }
+      if (photo.photoReference) {
+        // Convert photoReference to URL
+        return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photo.photoReference}&key=${apiKey}`;
+      }
+      if (photo.url) {
+        return photo.url;
+      }
+      return null;
+    })
+    .filter((url) => url !== null);
+};
+
+/**
  * Helper function to map AI location results to consistent response format
  * Includes all hybrid fields from Gemini-first approach
  */
@@ -307,7 +334,13 @@ export const addToPotential = async (req, res) => {
         : "No user"
     );
 
-    const { suggestionId, suggestionData, manualData, projectId } = req.body;
+    const {
+      suggestionId,
+      suggestionData,
+      manualData,
+      projectId,
+      locationRecordId,
+    } = req.body;
 
     // projectId is optional for backward compatibility, but recommended
     if (!projectId) {
@@ -331,17 +364,15 @@ export const addToPotential = async (req, res) => {
         address: suggestionData.address,
         region: suggestionData.region || suggestionData.address,
         projectId: projectId || null, // Store projectId for project-scoped locations
+        locationRecordId: locationRecordId || null, // Link to location record if provided
 
         // Enhanced fields from hybrid approach
         rating: suggestionData.rating,
         verified: suggestionData.verified || false,
         placeId: suggestionData.placeId,
 
-        // Images - handle multiple sources
-        images:
-          suggestionData.images ||
-          (suggestionData.photos && suggestionData.photos.map((p) => p.url)) ||
-          (suggestionData.imageUrl ? [suggestionData.imageUrl] : []),
+        // Images - convert photo references to full URLs
+        images: convertPhotoReferencesToUrls(suggestionData.photos),
         photos: suggestionData.photos || [],
 
         // Tags and types
@@ -589,17 +620,33 @@ export const finalizeLocation = async (req, res) => {
       });
     }
 
-    // Create finalized location
+    // Create finalized location with preserved data
     const finalizedLocationData = {
-      title: potentialLocation.title,
+      title: potentialLocation.title || potentialLocation.name,
+      name: potentialLocation.name,
       description: potentialLocation.description,
+      address: potentialLocation.address,
       coordinates: potentialLocation.coordinates,
       region: potentialLocation.region,
       projectId: potentialLocation.projectId, // Preserve projectId
+      locationRecordId: potentialLocation.locationRecordId, // Preserve location record link
+      potentialLocationId: potentialLocation._id, // Link back to original potential
       permits: potentialLocation.permits,
       images: potentialLocation.images,
+      photos: potentialLocation.photos,
+      rating: potentialLocation.rating,
+      placeId: potentialLocation.placeId,
+      mapsLink: potentialLocation.mapsLink,
+      googleTypes: potentialLocation.googleTypes,
+      filmingDetails: potentialLocation.filmingDetails,
+      estimatedCost: potentialLocation.estimatedCost,
+      verified: potentialLocation.verified,
+      budget: potentialLocation.budget,
+      amenities: potentialLocation.amenities,
+      cachedData: potentialLocation.cachedData,
       addedBy: potentialLocation.addedBy,
       notes: potentialLocation.notes,
+      teamNotes: potentialLocation.teamNotes || [], // Preserve team notes!
       approvals: potentialLocation.approvals,
       tags: potentialLocation.tags,
       finalizedBy: req.user._id,
@@ -609,6 +656,12 @@ export const finalizeLocation = async (req, res) => {
     const finalizedLocation = new FinalizedLocation(finalizedLocationData);
     await finalizedLocation.save();
 
+    console.log(
+      `✅ Finalized location "${finalizedLocation.title}" with ${
+        finalizedLocation.teamNotes?.length || 0
+      } team notes preserved`
+    );
+
     // Remove from potential locations
     await PotentialLocation.findByIdAndDelete(id);
 
@@ -617,17 +670,115 @@ export const finalizeLocation = async (req, res) => {
       { path: "finalizedBy", select: "username role" },
       { path: "notes.author", select: "username role" },
       { path: "approvals.userId", select: "username role" },
+      { path: "teamNotes.userId", select: "name email" },
+      { path: "locationRecordId", select: "name description" },
     ]);
 
     res.json({
       success: true,
       data: { location: finalizedLocation },
+      message: `Location finalized with ${
+        finalizedLocation.teamNotes?.length || 0
+      } team notes preserved`,
     });
   } catch (error) {
     console.error("Finalize location error:", error);
     res.status(500).json({
       success: false,
       error: "Internal server error while finalizing location.",
+    });
+  }
+};
+
+/**
+ * Un-finalize a location (move back to potentials)
+ * POST /api/locations/unfinalize/:id
+ */
+export const unfinalizeLocation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    const finalizedLocation = await FinalizedLocation.findById(id);
+    if (!finalizedLocation) {
+      return res.status(404).json({
+        success: false,
+        error: "Finalized location not found.",
+      });
+    }
+
+    // Check if user has permission (must be admin or the person who finalized it)
+    if (
+      finalizedLocation.finalizedBy.toString() !== userId.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({
+        success: false,
+        error:
+          "Only the person who finalized this location or an admin can un-finalize it.",
+      });
+    }
+
+    // Move back to potential locations
+    const potentialLocationData = {
+      projectId: finalizedLocation.projectId,
+      locationRecordId: finalizedLocation.locationRecordId,
+      title: finalizedLocation.title,
+      name: finalizedLocation.name,
+      description: finalizedLocation.description,
+      address: finalizedLocation.address,
+      coordinates: finalizedLocation.coordinates,
+      region: finalizedLocation.region,
+      permits: finalizedLocation.permits,
+      images: finalizedLocation.images,
+      photos: finalizedLocation.photos,
+      rating: finalizedLocation.rating,
+      placeId: finalizedLocation.placeId,
+      mapsLink: finalizedLocation.mapsLink,
+      googleTypes: finalizedLocation.googleTypes,
+      filmingDetails: finalizedLocation.filmingDetails,
+      estimatedCost: finalizedLocation.estimatedCost,
+      verified: finalizedLocation.verified,
+      budget: finalizedLocation.budget,
+      amenities: finalizedLocation.amenities,
+      cachedData: finalizedLocation.cachedData,
+      addedBy: finalizedLocation.addedBy,
+      notes: finalizedLocation.notes,
+      teamNotes: finalizedLocation.teamNotes || [], // Preserve team notes
+      approvals: finalizedLocation.approvals,
+      tags: finalizedLocation.tags,
+    };
+
+    const potentialLocation = new PotentialLocation(potentialLocationData);
+    await potentialLocation.save();
+
+    console.log(
+      `↩️ Un-finalized location "${
+        finalizedLocation.title
+      }" back to potentials with ${
+        potentialLocation.teamNotes?.length || 0
+      } team notes preserved`
+    );
+
+    // Remove from finalized locations
+    await FinalizedLocation.findByIdAndDelete(id);
+
+    await potentialLocation.populate([
+      { path: "addedBy", select: "username role" },
+      { path: "teamNotes.userId", select: "name email" },
+      { path: "locationRecordId", select: "name description" },
+    ]);
+
+    res.json({
+      success: true,
+      data: { location: potentialLocation },
+      message: "Location moved back to potentials successfully",
+    });
+  } catch (error) {
+    console.error("Un-finalize location error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Internal server error while un-finalizing location.",
     });
   }
 };
@@ -898,6 +1049,210 @@ export const directAddToFinalized = async (req, res) => {
         "Internal server error while adding location directly to finalized.",
       details:
         process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
+/**
+ * Add a team note to a potential location
+ * POST /api/locations/potential/:id/team-notes
+ */
+export const addTeamNote = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { note } = req.body;
+    const userId = req.userId;
+    const user = req.user;
+
+    if (!note || !note.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: "Note text is required",
+      });
+    }
+
+    const location = await PotentialLocation.findById(id);
+
+    if (!location) {
+      return res.status(404).json({
+        success: false,
+        error: "Potential location not found",
+      });
+    }
+
+    // Add team note
+    const teamNote = {
+      userId,
+      userName: user.name || user.username || "Unknown User",
+      userRole: user.role || "",
+      note: note.trim(),
+      timestamp: new Date(),
+      edited: false,
+    };
+
+    location.teamNotes.push(teamNote);
+    await location.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Team note added successfully",
+      data: teamNote,
+    });
+  } catch (error) {
+    console.error("Add team note error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to add team note",
+    });
+  }
+};
+
+/**
+ * Edit a team note (own notes only)
+ * PATCH /api/locations/potential/:id/team-notes/:noteId
+ */
+export const editTeamNote = async (req, res) => {
+  try {
+    const { id, noteId } = req.params;
+    const { note } = req.body;
+    const userId = req.userId;
+
+    if (!note || !note.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: "Note text is required",
+      });
+    }
+
+    const location = await PotentialLocation.findById(id);
+
+    if (!location) {
+      return res.status(404).json({
+        success: false,
+        error: "Potential location not found",
+      });
+    }
+
+    // Find the note
+    const teamNote = location.teamNotes.id(noteId);
+
+    if (!teamNote) {
+      return res.status(404).json({
+        success: false,
+        error: "Team note not found",
+      });
+    }
+
+    // Check if user owns the note
+    if (teamNote.userId.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        error: "You can only edit your own notes",
+      });
+    }
+
+    // Update note
+    teamNote.note = note.trim();
+    teamNote.edited = true;
+    teamNote.editedAt = new Date();
+
+    await location.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Team note updated successfully",
+      data: teamNote,
+    });
+  } catch (error) {
+    console.error("Edit team note error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to edit team note",
+    });
+  }
+};
+
+/**
+ * Delete a team note (own notes only)
+ * DELETE /api/locations/potential/:id/team-notes/:noteId
+ */
+export const deleteTeamNote = async (req, res) => {
+  try {
+    const { id, noteId } = req.params;
+    const userId = req.userId;
+
+    const location = await PotentialLocation.findById(id);
+
+    if (!location) {
+      return res.status(404).json({
+        success: false,
+        error: "Potential location not found",
+      });
+    }
+
+    // Find the note
+    const teamNote = location.teamNotes.id(noteId);
+
+    if (!teamNote) {
+      return res.status(404).json({
+        success: false,
+        error: "Team note not found",
+      });
+    }
+
+    // Check if user owns the note
+    if (teamNote.userId.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        error: "You can only delete your own notes",
+      });
+    }
+
+    // Remove note
+    teamNote.remove();
+    await location.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Team note deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete team note error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to delete team note",
+    });
+  }
+};
+
+/**
+ * Get all team notes for a potential location
+ * GET /api/locations/potential/:id/team-notes
+ */
+export const getTeamNotes = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const location = await PotentialLocation.findById(id)
+      .select("teamNotes")
+      .populate("teamNotes.userId", "name email");
+
+    if (!location) {
+      return res.status(404).json({
+        success: false,
+        error: "Potential location not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: location.teamNotes,
+    });
+  } catch (error) {
+    console.error("Get team notes error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to get team notes",
     });
   }
 };
