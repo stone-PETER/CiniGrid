@@ -31,6 +31,7 @@ app.use(
       "http://localhost:5173",
       "http://localhost:3000",
       "https://cini-grid-1nyv.vercel.app",
+      "https://cini-grid.vercel.app/",
     ],
     credentials: true,
   })
